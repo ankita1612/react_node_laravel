@@ -10,6 +10,8 @@
 npm install -D postcss @tailwindcss/postcss autoprefixer
 npm install react-hook-form yup @hookform/resolvers
 npm install react-router-dom axios
+npm install react-toastify
+
 🚀Step 3 :
 
 1. Create tailwind.config.js
@@ -70,3 +72,10 @@ React + Tailwind + TS 🚀
 }
 
 export default App;
+
++++++++++++Toaster MSG+++++++++++++
+in app.tsx add
+import { ToastContainer } from "react-toastify";
+import { Toast } from "./utils/toast";
+
+  <ToastContainer />
