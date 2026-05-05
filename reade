@@ -1,16 +1,14 @@
-🚀step 1 :
-
+step 1 :
 - go to client folder
 - npm create vite@latest
-  Choose:
-  ✔ React
-  ✔ TypeScript
+    Choose:
+        ✔ React
+        ✔ TypeScript
 
-🚀Step 2 :
+Step 2 :
 npm install -D tailwindcss postcss @tailwindcss/postcss autoprefixer
-npm install react-hook-form yup @hookform/resolvers
-npm install react-router-dom axios
-🚀Step 3 :
+
+Step 4 :
 
 1. Create tailwind.config.js
 
@@ -34,7 +32,7 @@ autoprefixer: {},
 },
 };
 
-🚀Step 4 :
+Step 5 :
 Open: src/index.css
 
 Replace everything with:
@@ -43,15 +41,14 @@ Replace everything with:
 @tailwind components;
 @tailwind utilities;
 
-🚀Step 5 — Import CSS
+Step 6 — Import CSS
 
 Open src/main.tsx:
 
 import './index.css'; // ✅ required
-
-🚀 Step 6 — Start project
+🚀 Step 7 — Start project
 npm run dev
-🚀 Step 7 — Test Tailwind
+🚀 Step 8 — Test Tailwind
 
 Replace App.tsx:
 
