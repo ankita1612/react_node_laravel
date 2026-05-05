@@ -1,54 +1,55 @@
-step 1 :
+🚀step 1 :
+
 - go to client folder
 - npm create vite@latest
-    Choose:
-        ✔ React
-        ✔ TypeScript
+  Choose:
+  ✔ React
+  ✔ TypeScript
 
-Step 2 :
-npm install -D tailwindcss postcss @tailwindcss/postcss autoprefixer
-
-Step 4 :
+🚀Step 2 :
+npm install -D postcss @tailwindcss/postcss autoprefixer
+npm install react-hook-form yup @hookform/resolvers
+npm install react-router-dom axios
+🚀Step 3 :
 
 1. Create tailwind.config.js
 
-/** @type {import('tailwindcss').Config} \*/
+/** @type {import('tailwindcss').Config} */
 export default {
-content: [
-"./index.html",
-"./src/**/\*.{js,ts,jsx,tsx}",
-],
-theme: {
-extend: {},
-},
-plugins: [],
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
 }
 
 2.Create postcss.config.js
 export default {
-plugins: {
-"@tailwindcss/postcss": {},
-autoprefixer: {},
-},
+  plugins: {
+    "@tailwindcss/postcss": {},
+    autoprefixer: {},
+  },
 };
 
-Step 5 :
+🚀Step 4 :
 Open: src/index.css
 
 Replace everything with:
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-Step 6 — Import CSS
+🚀Step 5 — Import CSS
 
 Open src/main.tsx:
 
 import './index.css'; // ✅ required
-🚀 Step 7 — Start project
+
+🚀 Step 6 — Start project
 npm run dev
-🚀 Step 8 — Test Tailwind
+🚀 Step 7 — Test Tailwind
 
 Replace App.tsx:
 

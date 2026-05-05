@@ -7,7 +7,7 @@
   ✔ TypeScript
 
 🚀Step 2 :
-npm install -D postcss @tailwindcss/postcss autoprefixer
+npm install -D tailwindcss postcss @tailwindcss/postcss autoprefixer
 npm install react-hook-form yup @hookform/resolvers
 npm install react-router-dom axios
 🚀Step 3 :
@@ -39,9 +39,6 @@ Open: src/index.css
 
 Replace everything with:
 
-@import "tailwindcss";
-
----OR--
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
