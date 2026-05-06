@@ -46,6 +46,7 @@ const Registration = () => {
       data.status = "active";
       const result = await apiClient.post("/api/auth/register", data);
       toast.success(result.data.message);
+      alert(result.data.message);
       navigate("/login");
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Server Error");

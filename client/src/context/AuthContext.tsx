@@ -1,82 +1,97 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import axios from "axios";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
+// ✅ User type
 type User = {
-  username: string;
   id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  role?: string;
 };
 
+// ✅ API User type (backend response)
+type ApiUser = {
+  _id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  role?: string;
+};
+
+// ✅ Context type
 type AuthContextType = {
-  accessToken: string | null;
   user: User | null;
   loading: boolean;
-  login: (accessToken: string, user: User) => void;
+  setUserData: (user: ApiUser) => void;
   logout: () => void;
-  updateAccessToken: (accessToken: string) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  // ✅ Normalize user (single source of truth)
+  const normalizeUser = (apiUser: ApiUser): User => ({
+    id: apiUser._id,
+    first_name: apiUser.first_name,
+    last_name: apiUser.last_name,
+    email: apiUser.email,
+    role: apiUser.role,
+  });
+
+  // ✅ Set user from API
+  const setUserData = (apiUser: ApiUser) => {
+    setUser(normalizeUser(apiUser));
+  };
+
+  // ✅ Fetch logged-in user
+  const fetchMe = async () => {
     try {
-      const stored = localStorage.getItem("auth_data");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setAccessToken(parsed.accessToken);
-        setUser(parsed.user);
-      }
-    } catch {
-      localStorage.removeItem("auth_data");
+      const res = await axios.get(BACKEND_URL + "/api/auth/profile", {
+        withCredentials: true,
+      });
+
+      setUserData(res.data.data);
+    } catch (error) {
+      setUser(null);
     } finally {
       setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    fetchMe();
   }, []);
 
-  const login = (accessToken: string, user: User) => {
-    setAccessToken(accessToken);
-    setUser(user);
-    localStorage.setItem("auth_data", JSON.stringify({ accessToken, user }));
-  };
-
+  // ✅ Logout
   const logout = () => {
-    setAccessToken(null);
     setUser(null);
-    localStorage.removeItem("auth_data");
   };
-  const updateAccessToken = (newAccessToken: string) => {
-    // 1️⃣ Update React state
-    setAccessToken(newAccessToken);
 
-    // 2️⃣ Update localStorage
-    const stored = localStorage.getItem("auth_data");
-
-    if (stored) {
-      const parsed = JSON.parse(stored);
-
-      localStorage.setItem(
-        "auth_data",
-        JSON.stringify({
-          ...parsed,
-          accessToken: newAccessToken,
-        }),
-      );
-    }
-  };
   return (
     <AuthContext.Provider
-      value={{ accessToken, user, login, logout, updateAccessToken, loading }}
+      value={{
+        user,
+        loading,
+        setUserData,
+        logout,
+      }}
     >
       {children}
     </AuthContext.Provider>
   );
 }
 
+// ✅ Hook
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used inside AuthProvider");
+  if (!context) {
+    throw new Error("useAuth must be used inside AuthProvider");
+  }
   return context;
 };

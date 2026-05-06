@@ -1,27 +1,40 @@
 import PrivateRoute from "./layout/PrivateRoute";
 import PublicRoute from "./layout/PublicRoute";
-import { Toaster } from "react-hot-toast";
-import { Toast } from "./utils/toast";
+import { Toaster, toast } from "react-hot-toast";
+import CustomToast from "./utils/CustomToast";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Registration from "./components/Registration";
 import Login from "./components/Login";
+import { HiCheckCircle, HiXCircle, HiInformationCircle } from "react-icons/hi";
+
+toast.info = (message: string) =>
+  toast(message, {
+    duration: 2000,
+    icon: <HiInformationCircle className="text-blue-500 w-7 h-7" />,
+  });
+// Success
+toast.success = (message: string) =>
+  toast(message, {
+    duration: 2000,
+    icon: <HiCheckCircle className="text-green-400 w-7 h-7" />,
+    styleType: "success",
+  });
+
+// Error
+toast.error = (message: string) =>
+  toast(message, {
+    duration: 2000,
+    icon: <HiXCircle className="text-red-500 w-7 h-7" />,
+    styleType: "error",
+  });
 function App() {
-  const handleShowToast = (type: "success" | "info" | "error" | "warning") => {
-    const messages = {
-      success: "Data saved successfully!",
-      info: "New update available!",
-      error: "Something went wrong!",
-      warning: "Check your input!",
-    };
-
-    Toast[type](messages[type]);
-  };
-
   return (
     <>
-      <Toaster position="top-right" />
+      <Toaster position="top-right" gutter={8}>
+        {(t) => <CustomToast t={t} />}
+      </Toaster>
 
       <div className="flex flex-col min-h-screen bg-gray-50">
         <Header />
