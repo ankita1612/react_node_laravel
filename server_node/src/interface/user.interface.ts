@@ -3,13 +3,12 @@ export default interface IUser {
   email:string,
   password: string,
   DOB ?: Date,
-  status: Status,
+  status: string,
+  role: string,
   profile_image ?: string;
+  deletedAt?:Date
 }
-export enum Status {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-}
+
 export interface ILoginResponse {
   //user: Omit<IUser, "password">;
   user: IUser;

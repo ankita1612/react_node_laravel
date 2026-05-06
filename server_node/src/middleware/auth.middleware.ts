@@ -2,41 +2,46 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import User from "../models/user.model";
 import { Request, Response, NextFunction } from "express";
 import ApiError from "../utils/api.error";
+import IUser from "../interface/user.interface";
 
 interface AuthRequest extends Request {
   user?: any;
 }
 
-const authentication = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authentication = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader?.startsWith("Bearer ")) {
-      throw new ApiError("Authorization header missing", 401);
+  
+    const token = req.cookies.adminToken;
+console.log(token)
+    if (!token) {
+      return res.status(401).json({ message: "Unauthorized user11" });
     }
 
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.ACCESS_SECRET!) as JwtPayload;
-    if (!decoded || !decoded.id) {
-      throw new ApiError("Invalid token payload", 401);
-    }
+    const decoded: any = jwt.verify(token, process.env.ACCESS_SECRET!);
 
-    const user = await User.findById(decoded.id).select("_id email role");
-    if (!user) {
-      throw new ApiError("User not found", 401);
+    const user = await User.findOne({
+  _id: decoded.id,
+  deletedAt: null,
+}).select("_id name email role");
+console.log(user)
+    if (
+      !user ||
+      (user.role !== "Admin" && user.role !== "User")
+    ) {
+      return res.status(403).json({ message: "Forbidden" });
     }
-
+    
     req.user = user;
-    next();
 
+    next();
   } catch (error: any) {
-    if (error.name === "TokenExpiredError") {
-      return next(new ApiError("Token expired", 401));
-    }
-    if (error.name === "JsonWebTokenError") {
-      return next(new ApiError("Invalid token", 401));
-    }
-    next(error);
+  console.error(error); // log full error in backend
+
+    return res.status(401).json({ message: "Unauthorized" });
   }
 };
 

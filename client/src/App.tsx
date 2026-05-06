@@ -4,11 +4,13 @@ import { Toaster, toast } from "react-hot-toast";
 import CustomToast from "./utils/CustomToast";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import About from "./components/About";
+import Home from "./components/Home";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Registration from "./components/Registration";
 import Login from "./components/Login";
 import { HiCheckCircle, HiXCircle, HiInformationCircle } from "react-icons/hi";
-
+import ProtectedRoute from "./layout/ProtectedRoute";
 toast.info = (message: string) =>
   toast(message, {
     duration: 2000,
@@ -42,9 +44,18 @@ function App() {
           <Routes>
             <Route path="/" element={<Navigate to="/registration" />} />
             <Route element={<PublicRoute />}>
+              <Route path="/home" element={<Home />} />
               <Route path="/registration" element={<Registration />} />
               <Route path="/login" element={<Login />} />
             </Route>
+            <Route
+              path="about"
+              element={
+                <ProtectedRoute>
+                  <About />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </main>
         <Footer />

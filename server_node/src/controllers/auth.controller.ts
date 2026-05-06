@@ -14,7 +14,7 @@ class AuthController {
       try {        
         const user = await authService.register({
             ...req.body,
-            profile_image: req.file?.path
+          //  profile_image: req.file?.path
         });
         res.status(201).json({"success":true,"message":"You are register successfully. Please Login","data":user});
       } catch (error : any) {        
@@ -34,6 +34,13 @@ class AuthController {
           next(error);
         }
       };
+  profile = async (req: Request, res: Response) => {
+    res.json("req")
+    // res.json({
+    //   success: true,
+    //   data:req?.user, // ✅ Assumes `req.user` is set by middleware
+    // });
+  };
     refresh = async (req: Request, res: Response, next: NextFunction): Promise<void> =>{    
       try {
         const token = req.cookies?.refreshToken;
@@ -58,3 +65,4 @@ class AuthController {
     }
 }
 export const authController = new AuthController();
+ 

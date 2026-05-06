@@ -10,4 +10,6 @@ authRouter.post('/register', singleUpload.single('profile_image'), validateRegis
 authRouter.post('/login', validateLogin, isRequestValidated, authController.login)
 authRouter.post('/refresh', authController.refresh)
 authRouter.post("/logout",authentication, isRequestValidated, authController.logout);
+authRouter.get("/profile", authentication, authController.profile);
+
 export default authRouter;

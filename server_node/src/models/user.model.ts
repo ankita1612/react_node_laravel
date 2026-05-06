@@ -1,5 +1,5 @@
 import  {Schema, model,} from 'mongoose'
-import  IUser, {Status}  from "../interface/user.interface";
+import  IUser  from "../interface/user.interface";
 
 const userSchema = new Schema<IUser>({
     name: {
@@ -16,12 +16,21 @@ const userSchema = new Schema<IUser>({
     },
      status: {
         type: String,
-        enum: Object.values(Status), 
-        default: Status.ACTIVE,
+        enum: ["Active","Inactive"], 
+        default: "Active",
   }, 
+   role: {
+      type: String,
+      enum: ["Admin","User"],
+      default: "User",
+    },
     profile_image :{
         type: String,
-    }
-})
+    },
+     deletedAt: {
+      type: Date,
+      default: null,
+    },
+} ,{ timestamps: true },)
  const User = model<IUser>('User', userSchema )
  export default User
