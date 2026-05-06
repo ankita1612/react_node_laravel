@@ -9,13 +9,11 @@ export default interface IUser {
   deletedAt?:Date
 }
 
-export interface ILoginResponse {
-  //user: Omit<IUser, "password">;
-  user: IUser;
-  accessToken: string;
-  refreshToken: string;
-}
 
+export interface ILoginResponse {  
+  user: IUser;
+  adminToken: string;
+}
 export interface ILogin {
   email: string;
   password: string;

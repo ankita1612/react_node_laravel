@@ -1,16 +1,16 @@
-import PrivateRoute from "./layout/PrivateRoute";
-import PublicRoute from "./layout/PublicRoute";
 import { Toaster, toast } from "react-hot-toast";
 import CustomToast from "./utils/CustomToast";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import About from "./components/About";
 import Home from "./components/Home";
+import PageNotFound from "./components/PageNotFound";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Registration from "./components/Registration";
 import Login from "./components/Login";
 import { HiCheckCircle, HiXCircle, HiInformationCircle } from "react-icons/hi";
 import ProtectedRoute from "./layout/ProtectedRoute";
+import PublicRoute from "./layout/PublicRoute";
 toast.info = (message: string) =>
   toast(message, {
     duration: 2000,
@@ -42,7 +42,7 @@ function App() {
         <Header />
         <main className="flex-1 p-2">
           <Routes>
-            <Route path="/" element={<Navigate to="/registration" />} />
+            <Route path="/" element={<Navigate to="/home" />} />
             <Route element={<PublicRoute />}>
               <Route path="/home" element={<Home />} />
               <Route path="/registration" element={<Registration />} />
@@ -56,6 +56,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="*" element={<PageNotFound />} />
           </Routes>
         </main>
         <Footer />

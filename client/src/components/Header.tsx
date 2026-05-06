@@ -38,43 +38,51 @@ function Header() {
             >
               Home
             </NavLink>
-            <NavLink
-              to="/login"
-              className={({ isActive }) =>
-                `transition hover:text-gray-600 ${
-                  isActive ? "text-blue-600 font-semibold" : ""
-                }`
-              }
-            >
-              Login
-            </NavLink>
-            <NavLink
-              to="/registration"
-              className={({ isActive }) =>
-                `transition hover:text-gray-600 ${
-                  isActive ? "text-blue-600 font-semibold" : ""
-                }`
-              }
-            >
-              Registration
-            </NavLink>
-            <NavLink
-              to="/about"
-              className={({ isActive }) =>
-                `transition hover:text-gray-600 ${
-                  isActive ? "text-blue-600 font-semibold" : ""
-                }`
-              }
-            >
-              About
-            </NavLink>
+            {!user && (
+              <>
+                <NavLink
+                  to="/login"
+                  className={({ isActive }) =>
+                    `transition hover:text-gray-600 ${
+                      isActive ? "text-blue-600 font-semibold" : ""
+                    }`
+                  }
+                >
+                  Login
+                </NavLink>
+                <NavLink
+                  to="/registration"
+                  className={({ isActive }) =>
+                    `transition hover:text-gray-600 ${
+                      isActive ? "text-blue-600 font-semibold" : ""
+                    }`
+                  }
+                >
+                  Registration
+                </NavLink>
+              </>
+            )}
+            {user && (
+              <>
+                <NavLink
+                  to="/about"
+                  className={({ isActive }) =>
+                    `transition hover:text-gray-600 ${
+                      isActive ? "text-blue-600 font-semibold" : ""
+                    }`
+                  }
+                >
+                  About
+                </NavLink>
 
-            <button
-              onClick={handleLogout}
-              className="text-red-500 transition hover:text-gray-600"
-            >
-              Logout
-            </button>
+                <button
+                  onClick={handleLogout}
+                  className="text-red-500 transition hover:text-gray-600"
+                >
+                  Logout
+                </button>
+              </>
+            )}
           </nav>
         </div>
       </div>

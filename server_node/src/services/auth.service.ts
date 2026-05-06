@@ -23,42 +23,36 @@ export class AuthService {
     });
     return user;
   }
-  async login(data: ILogin ): Promise<ILoginResponse | null | String> {
-    const user  = await User.findOne({"email":data.email})
-    if(!user){        
-        throw new ApiError("User not exist", 404);        
-    }
-    const passwordMatched = await bcrypt.compare(data.password, user.password );
-    if(!passwordMatched){        
-        throw new ApiError("Invalid password", 401);
-    }
+  
+  async login(data: ILogin): Promise<ILoginResponse> {
+    const user = await User.findOne({
+      email: data.email,
+      role: { $in: ["Admin","User"] },
+    });
 
-    if (!process.env.ACCESS_SECRET || !process.env.REFRESH_SECRET  ) {
-      throw new ApiError("ACCESS_SECRET or REFRESH_SECRET not configured",500);
+    if (!user) {
+      throw new ApiError("User not exist", 404);
     }
 
-    const accessToken = jwt.sign({ id: user._id }, process.env.ACCESS_SECRET!, {
-    expiresIn: "1d",
-  });
+    const passwordMatched = await bcrypt.compare(data.password, user.password);
+    if (!passwordMatched) {
+      throw new ApiError("Invalid password", 401);
+    }
 
-  const refreshToken = jwt.sign({ id: user._id }, process.env.REFRESH_SECRET!, {
-    expiresIn: "7d",
-  });
+    if (!process.env.ACCESS_SECRET || !process.env.REFRESH_SECRET) {
+      throw new ApiError("ACCESS_SECRET or REFRESH_SECRET not configured", 500);
+    }
 
-  const hashedToken = crypto.createHash("sha256").update(refreshToken).digest("hex");
-
-  await RefreshToken.create({
-    userId: user._id,
-    token: hashedToken,
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-  });
+    const adminToken = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.ACCESS_SECRET!,
+      { expiresIn: "1d" },
+    );
 
     const userObj = user.toObject();
-   // delete (userObj as any).password;
+    delete (userObj as any).password; // ✅ Remove password from response
 
-    return {
-      user: userObj, "accessToken":accessToken,"refreshToken": refreshToken,
-    };
+    return { user: userObj, adminToken };
   }
 
 

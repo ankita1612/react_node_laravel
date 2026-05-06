@@ -22,24 +22,38 @@ class AuthController {
       }
     };    
     
-    login = async (req: Request<{}, {},ILogin>, res: Response, next: NextFunction): Promise<void> => {
-        try {
-          const response = await authService.login(req.body);
-          const { user, accessToken, refreshToken } = response as { user: any; accessToken: string; refreshToken: string };
-
-          res.cookie("refreshToken", refreshToken, cookieOptions);
-          res.status(200).json({"success":true,"message":"Login successfully","data":{ user, accessToken }});
-
-        } catch (error:any) {         
-          next(error);
-        }
+    login = async (
+    req: Request<{}, {}, ILogin>,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const response = await authService.login(req.body);
+       const { user, adminToken } = response as {
+        user: any;
+        adminToken: string;
       };
+        
+      res.cookie("adminToken", adminToken, {
+        httpOnly: true,
+        secure: false, // ⚠️ Set true in production with HTTPS
+        sameSite: "lax",
+        maxAge: 24 * 60 * 60 * 1000, // 1 days
+      });
+
+      res
+        .status(200)
+        .json({ success: true, message: "Login successfully", data: { user } });
+    } catch (error: any) {
+      next(error);
+    }
+  };
   profile = async (req: Request, res: Response) => {
-    res.json("req")
-    // res.json({
-    //   success: true,
-    //   data:req?.user, // ✅ Assumes `req.user` is set by middleware
-    // });
+    //res.json( req.user)
+    res.status(200).json({
+      success: true,
+      data:  (req as any).user
+    });
   };
     refresh = async (req: Request, res: Response, next: NextFunction): Promise<void> =>{    
       try {

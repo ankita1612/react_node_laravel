@@ -14,33 +14,29 @@ export const authentication = async (
   next: NextFunction,
 ) => {
   try {
-  
-    const token = req.cookies.adminToken;
-console.log(token)
+    const token = req.cookies.adminToken || req.cookies.userToken;
+
     if (!token) {
-      return res.status(401).json({ message: "Unauthorized user11" });
+      return res.status(401).json({ message: "Unauthorized user" });
     }
 
     const decoded: any = jwt.verify(token, process.env.ACCESS_SECRET!);
 
-    const user = await User.findOne({
-  _id: decoded.id,
-  deletedAt: null,
-}).select("_id name email role");
-console.log(user)
+    const user = await User.findById(decoded.id).select(
+      "_id first_name last_name email role",
+    );
+
     if (
       !user ||
       (user.role !== "Admin" && user.role !== "User")
     ) {
       return res.status(403).json({ message: "Forbidden" });
     }
-    
+console.log(req.user)
     req.user = user;
 
     next();
-  } catch (error: any) {
-  console.error(error); // log full error in backend
-
+  } catch {
     return res.status(401).json({ message: "Unauthorized" });
   }
 };
