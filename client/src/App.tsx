@@ -1,22 +1,40 @@
-import { useEffect } from "react";
-import { ToastContainer } from "react-toastify";
+import PrivateRoute from "./layout/PrivateRoute";
+import PublicRoute from "./layout/PublicRoute";
+import { Toaster } from "react-hot-toast";
 import { Toast } from "./utils/toast";
-
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Registration from "./components/Registration";
+import Login from "./components/Login";
 function App() {
-  // useEffect(() => {
-  //   Toast.success("Data saved successfully!");
-  //   Toast.error("Something went wrong!");
-  //   Toast.info("New update available!");
-  //   Toast.warning("Check your input!");
-  // }, []);
+  const handleShowToast = (type: "success" | "info" | "error" | "warning") => {
+    const messages = {
+      success: "Data saved successfully!",
+      info: "New update available!",
+      error: "Something went wrong!",
+      warning: "Check your input!",
+    };
+
+    Toast[type](messages[type]);
+  };
 
   return (
     <>
-      <ToastContainer />
-      <div className="flex items-center justify-center h-screen bg-gray-100">
-        <h1 className="text-3xl font-bold text-blue-600">
-          React + Tailwind + TS 🚀
-        </h1>
+      <Toaster position="top-right" />
+
+      <div className="flex flex-col min-h-screen bg-gray-50">
+        <Header />
+        <main className="flex-1 p-2">
+          <Routes>
+            <Route path="/" element={<Navigate to="/registration" />} />
+            <Route element={<PublicRoute />}>
+              <Route path="/registration" element={<Registration />} />
+              <Route path="/login" element={<Login />} />
+            </Route>
+          </Routes>
+        </main>
+        <Footer />
       </div>
     </>
   );

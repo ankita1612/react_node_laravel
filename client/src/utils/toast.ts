@@ -1,25 +1,20 @@
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import toast from "react-hot-toast";
 
 const defaultConfig = {
-  position: "top-right",
-  autoClose: 3000,
-  hideProgressBar: false,
-  closeOnClick: true,
-  pauseOnHover: true,
-  draggable: true,
+  duration: 3000,
+  position: "top-right" as const,
 };
 
 export const Toast = {
-  success: (message, options = {}) =>
+  success: (message: string, options = {}) =>
     toast.success(message, { ...defaultConfig, ...options }),
 
-  error: (message, options = {}) =>
+  error: (message: string, options = {}) =>
     toast.error(message, { ...defaultConfig, ...options }),
 
-  info: (message, options = {}) =>
-    toast.info(message, { ...defaultConfig, ...options }),
+  info: (message: string, options = {}) =>
+    toast(message, { ...defaultConfig, ...options }),
 
-  warning: (message, options = {}) =>
-    toast.warn(message, { ...defaultConfig, ...options }),
+  warning: (message: string, options = {}) =>
+    toast(message, { ...defaultConfig, ...options }),
 };
