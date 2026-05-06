@@ -20,9 +20,7 @@ copy tsconfig.json
 
 create .env file
 
-To Run typescript in dev
-+++++++++++++++++++++++++++++++++++++
-npx ts-node-dev src/server.ts
+To Run typescript in dev : npx ts-node-dev src/server.ts
 
 Notes : npx ts-node-dev runs your TypeScript Node app directly and restarts it automatically when files change — perfect for development, never for production.
 
