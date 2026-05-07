@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import type { loginInterface } from "../interface/login.interface";
 import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
-import apiClient from "../utils/apiClient";
+import apiClient, { initializeCsrfToken } from "../utils/apiClient";
 interface LoginFormData {
   email: string;
   password: string;
@@ -36,7 +36,8 @@ const Login = () => {
   });
   const onSubmit = async (data: LoginFormData) => {
     try {
-      await apiClient.get("/sanctum/csrf-cookie");
+      // await initializeCsrfToken();
+
       const result = await apiClient.post("/api/auth/login", {
         email: data.email,
         password: data.password,
@@ -46,7 +47,7 @@ const Login = () => {
       if (result.data.success && result.data.data?.user) {
         setUserData(result.data.data.user);
         toast.success(result.data.message || "Login successful!");
-        navigate("/dashboard");
+        navigate("/employee/list");
       }
     } catch (error: any) {
       const errorMsg =

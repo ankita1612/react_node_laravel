@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initializeAuth = async () => {
       // First, fetch CSRF token
-      await initializeCsrfToken();
+      //await initializeCsrfToken();
       // Then fetch user data
       await fetchMe();
     };

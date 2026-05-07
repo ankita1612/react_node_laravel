@@ -4,6 +4,9 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import About from "./components/About";
 import Home from "./components/Home";
+import EmployeeList from "./components/employee/EmployeeList";
+import EmployeeAdd from "./components/employee/EmployeeAdd";
+
 import PageNotFound from "./components/PageNotFound";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Registration from "./components/Registration";
@@ -48,14 +51,18 @@ function App() {
               <Route path="/registration" element={<Registration />} />
               <Route path="/login" element={<Login />} />
             </Route>
-            <Route
-              path="about"
-              element={
-                <ProtectedRoute>
-                  <About />
-                </ProtectedRoute>
-              }
-            />
+            <Route element={<ProtectedRoute />}>
+              <Route path="/about" element={<About />} />
+
+              <Route path="/employee/list" element={<EmployeeList />} />
+
+              <Route path="/employee/add" element={<EmployeeAdd />} />
+
+              {/* Edit */}
+              <Route path="/employee/add/:id" element={<EmployeeAdd />} />
+            </Route>
+
+            {/* 404 */}
             <Route path="*" element={<PageNotFound />} />
           </Routes>
         </main>

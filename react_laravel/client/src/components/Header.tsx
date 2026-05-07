@@ -69,7 +69,16 @@ function Header() {
                 >
                   About
                 </NavLink>
-
+                <NavLink
+                  to="/employee/list"
+                  className={({ isActive }) =>
+                    `transition hover:text-gray-600 ${
+                      isActive ? "text-blue-600 font-semibold" : ""
+                    }`
+                  }
+                >
+                  Employee
+                </NavLink>
                 <button
                   onClick={handleLogout}
                   className="text-red-500 transition hover:text-gray-600"
