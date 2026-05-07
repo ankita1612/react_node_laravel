@@ -14,15 +14,15 @@ function EmployeeRow({ employeeData, handleDelete }: EmployeeRowProps) {
     navigate(`/employee/add/${employeeData.id}`);
   };
 
-  const confirmDelete = () => {
-    const confirmBox = window.confirm(
-      "Are you sure you want to delete this employee?",
-    );
+  // const confirmDelete = () => {
+  //   const confirmBox = window.confirm(
+  //     "Are you sure you want to delete this employee?",
+  //   );
 
-    if (confirmBox) {
-      handleDelete(employeeData.id!);
-    }
-  };
+  //   if (confirmBox) {
+  //     handleDelete(employeeData.id!);
+  //   }
+  // };
 
   return (
     <div className="grid items-center grid-cols-8 gap-4 px-6 py-4 text-sm text-gray-600 transition hover:bg-gray-50">
@@ -75,7 +75,7 @@ function EmployeeRow({ employeeData, handleDelete }: EmployeeRowProps) {
         </button>
 
         <button
-          onClick={confirmDelete}
+          onClick={() => handleDelete(employeeData.id!)}
           className="p-2 text-red-600 transition rounded-lg hover:bg-red-100"
         >
           <Trash2 size={18} />
