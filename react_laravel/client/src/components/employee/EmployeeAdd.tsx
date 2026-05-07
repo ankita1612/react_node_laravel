@@ -31,7 +31,19 @@ const schema = yup.object().shape({
   description: yup.string().required("Description is required"),
   hobbies: yup.string().required("Hobby is required"),
   status: yup.string().required("Status is required"),
-  profile_image: yup.mixed().required("Profile image is required"),
+  profile_image: yup
+    .mixed<File>()
+    .required("Profile image is required")
+    .test("fileType", "Only JPG/PNG allowed", (value) => {
+      if (!value) return false;
+
+      return ["image/jpeg", "image/png"].includes(value.type);
+    })
+    .test("fileSize", "File size must be less than 2MB", (value) => {
+      if (!value) return false;
+
+      return value.size <= 2 * 1024 * 1024;
+    }),
   logo: yup.mixed().nullable(),
 });
 
@@ -67,7 +79,19 @@ const editSchema = yup.object().shape({
 
   status: yup.string().required("Status is required"),
 
-  profile_image: yup.mixed().nullable(),
+  profile_image: yup
+    .mixed()
+    .nullable()
+    .test("fileType", "Only JPG/PNG allowed", (value) => {
+      if (!value) return false;
+
+      return ["image/jpeg", "image/png"].includes(value.type);
+    })
+    .test("fileSize", "File size must be less than 2MB", (value) => {
+      if (!value) return false;
+
+      return value.size <= 2 * 1024 * 1024;
+    }),
 
   logo: yup.mixed().nullable(),
 });
@@ -78,7 +102,6 @@ function EmployeeAdd() {
   let navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  const [existingImage, setExistingImage] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [newImagesPreview, setNewImagesPreview] = useState<string[]>([]);
@@ -155,7 +178,7 @@ function EmployeeAdd() {
     register,
     handleSubmit,
     setValue,
-    watch,
+
     formState: { errors },
   } = useForm<IEmployee>({
     resolver: yupResolver(mode == "edit" ? editSchema : schema),
