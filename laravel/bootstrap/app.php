@@ -12,11 +12,13 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware): void {
-        //
-    })->withMiddleware(function ($middleware) {
+    ->withMiddleware(function ($middleware) {
     $middleware->api([
         EnsureFrontendRequestsAreStateful::class,
+    ]);
+
+    $middleware->web(append: [
+        \Illuminate\Session\Middleware\StartSession::class,
     ]);
     })->withExceptions(function (Exceptions $exceptions): void {
         //
