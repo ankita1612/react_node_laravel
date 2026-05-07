@@ -15,7 +15,7 @@ function EmployeeRow({ employeeData, handleDelete }: EmployeeRowProps) {
   };
 
   return (
-    <div className="grid items-center grid-cols-8 gap-4 px-3 py-2 text-sm text-gray-600 transition-all duration-200 hover:bg-gray-50">
+    <div className="grid items-center grid-cols-8 gap-4 px-6 py-4 text-sm text-gray-600 transition-all duration-200 hover:bg-gray-50">
       {/* First Name */}
       <div className="font-semibold ">{employeeData.first_name}</div>
 

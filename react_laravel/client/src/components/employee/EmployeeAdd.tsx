@@ -9,37 +9,29 @@ import apiClient, { initializeCsrfToken } from "../../utils/apiClient";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const schema = yup.object().shape({
   first_name: yup.string().required("First name is required"),
-
   last_name: yup.string().nullable(),
-
   salary: yup
     .number()
     .typeError("Salary must be a number")
     .required("Salary is required"),
-
   age: yup
     .number()
     .nullable()
     .transform((value, originalValue) => (originalValue === "" ? null : value)),
-
   dob: yup
     .date()
+    .nullable()
+    .transform((value, originalValue) => (originalValue === "" ? null : value))
     .typeError("Please select valid DOB")
     .required("DOB is required"),
-
   DOJ: yup
     .date()
     .nullable()
     .transform((value, originalValue) => (originalValue === "" ? null : value)),
-
   description: yup.string().required("Description is required"),
-
   hobbies: yup.string().required("Hobby is required"),
-
   status: yup.string().required("Status is required"),
-
   profile_image: yup.mixed().required("Profile image is required"),
-
   logo: yup.mixed().nullable(),
 });
 
@@ -60,9 +52,10 @@ const editSchema = yup.object().shape({
 
   dob: yup
     .date()
+    .nullable()
+    .transform((value, originalValue) => (originalValue === "" ? null : value))
     .typeError("Please select valid DOB")
     .required("DOB is required"),
-
   DOJ: yup
     .date()
     .nullable()
@@ -89,16 +82,20 @@ function EmployeeAdd() {
   const [preview, setPreview] = useState<string | null>(null);
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [newImagesPreview, setNewImagesPreview] = useState<string[]>([]);
+  const [profilePreview, setProfilePreview] = useState<string | null>(null);
+
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
   useEffect(() => {
     if (id) setMode("edit");
   }, [id]);
   useEffect(() => {
     return () => {
-      if (preview) URL.revokeObjectURL(preview);
+      if (profilePreview) URL.revokeObjectURL(profilePreview);
+
+      if (logoPreview) URL.revokeObjectURL(logoPreview);
       newImagesPreview.forEach((url) => URL.revokeObjectURL(url));
     };
-  }, [preview, newImagesPreview]);
-
+  }, [profilePreview, logoPreview, newImagesPreview]);
   useEffect(() => {
     if (!id) return;
     const fetchEmployee = async () => {
@@ -122,9 +119,14 @@ function EmployeeAdd() {
         setValue("status", data.data.status);
 
         setExistingImage(data.data.profile_image);
+        if (data.data.profile_image) {
+          setProfilePreview(
+            `${BACKEND_URL}/storage/${data.data.profile_image}`,
+          );
+        }
 
         if (data.data.logo) {
-          setPreview(`${BACKEND_URL}/storage/${data.data.logo}`);
+          setLogoPreview(`${BACKEND_URL}/storage/${data.data.logo}`);
         }
 
         if (data.data.dob) {
@@ -136,10 +138,6 @@ function EmployeeAdd() {
         }
         setExistingImage(data.data.single_image);
         setExistingImages(data.data.multiple_image || []); // array of paths
-        if (data?.data?.title) {
-          const date = new Date(data.data.DOB);
-          setValue("DOB", date.toISOString().split("T")[0]);
-        }
       } catch (error: any) {
         toast.error(
           error?.response?.data?.message ||
@@ -183,13 +181,9 @@ function EmployeeAdd() {
       const formData = new FormData();
 
       formData.append("first_name", data.first_name);
-
       formData.append("last_name", data.last_name || "");
-
       formData.append("salary", String(data.salary));
-
       formData.append("age", data.age ? String(data.age) : "");
-
       formData.append(
         "dob",
         typeof data.dob === "string"
@@ -270,7 +264,7 @@ function EmployeeAdd() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <label className="block mb-1 text-sm font-medium">
-                First Name
+                First Name <span className="text-red-500">*</span>
               </label>
 
               <input
@@ -299,7 +293,9 @@ function EmployeeAdd() {
             </div>
           </div>
           <div>
-            <label className="block mb-1 text-sm font-medium">Salary</label>
+            <label className="block mb-1 text-sm font-medium">
+              Salary <span className="text-red-500">*</span>
+            </label>
 
             <input
               type="number"
@@ -321,13 +317,18 @@ function EmployeeAdd() {
             />
           </div>
           <div>
-            <label className="block mb-1 text-sm font-medium">DOB</label>
+            <label className="block mb-1 text-sm font-medium">
+              DOB <span className="text-red-500">*</span>
+            </label>
 
             <input
               type="date"
               {...register("dob")}
               className="w-full py-2 pl-2 pr-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-300"
             />
+            {errors.dob && (
+              <p className="text-sm text-red-500">{errors.dob.message}</p>
+            )}
           </div>
           <div>
             <label className="block mb-1 text-sm font-medium">DOJ</label>
@@ -340,7 +341,7 @@ function EmployeeAdd() {
           </div>
           <div>
             <label className="block mb-1 text-sm font-medium">
-              Description
+              Description <span className="text-red-500">*</span>
             </label>
 
             <textarea
@@ -415,11 +416,22 @@ function EmployeeAdd() {
 
                 if (file) {
                   setValue("profile_image", file);
-                  setPreview(URL.createObjectURL(file));
+
+                  const imageUrl = URL.createObjectURL(file);
+
+                  setProfilePreview(imageUrl);
                 }
               }}
-              className="w-full p-2 border rounded-lg"
+              className="w-full py-2 pl-2 pr-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-300"
             />
+
+            {profilePreview && (
+              <img
+                src={profilePreview}
+                alt="Profile Preview"
+                className="object-cover w-24 h-24 mt-3 border rounded-lg"
+              />
+            )}
           </div>
           <div>
             <label className="block mb-1 text-sm font-medium">Logo</label>
@@ -432,20 +444,31 @@ function EmployeeAdd() {
 
                 if (file) {
                   setValue("logo", file);
+
+                  const imageUrl = URL.createObjectURL(file);
+
+                  setLogoPreview(imageUrl);
                 }
               }}
-              className="w-full p-2 border rounded-lg"
+              className="w-full py-2 pl-2 pr-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-300"
             />
+
+            {logoPreview && (
+              <img
+                src={logoPreview}
+                alt="Logo Preview"
+                className="object-cover w-24 h-24 mt-3 border rounded-lg"
+              />
+            )}
           </div>
           {/* Buttons */}
           <div className="flex justify-center gap-3 pt-3">
             <button
               type="submit"
-              // disabled={loading}
-              className="px-5 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              disabled={loading}
+              className="px-5 py-2 text-white bg-blue-500 rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
-              Save
-              {/* {loading ? "Saving..." : "Save"} */}
+              {loading ? "Saving..." : "Save"}
             </button>
 
             <button
@@ -458,6 +481,15 @@ function EmployeeAdd() {
           </div>
         </div>
       </form>
+      {loading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-10 h-10 border-4 border-white rounded-full border-t-transparent animate-spin"></div>
+
+            <p className="text-sm text-white">Loading...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
