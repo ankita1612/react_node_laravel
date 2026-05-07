@@ -34,23 +34,24 @@ const Login = () => {
   } = useForm<LoginFormData>({
     resolver: yupResolver(schema),
   });
-  const onSubmit = async (data: loginInterface) => {
+  const onSubmit = async (data: LoginFormData) => {
     try {
-      const userData = {
+      await apiClient.get("/sanctum/csrf-cookie");
+      const result = await apiClient.post("/api/auth/login", {
         email: data.email,
         password: data.password,
-      };
+      });
 
-      const result = await apiClient.post("/api/auth/login", userData);
-      const apiUser = result.data.data.user;
-      setUserData(apiUser);
-      toast.success("Login successfully!"); // ✅ success toast
-
-      navigate("/dashboard");
+      // Extract user from response
+      if (result.data.success && result.data.data?.user) {
+        setUserData(result.data.data.user);
+        toast.success(result.data.message || "Login successful!");
+        navigate("/dashboard");
+      }
     } catch (error: any) {
-      console.log(error);
-
-      toast.error(error.response?.data?.message || "Login failed"); // ✅ error toast
+      const errorMsg =
+        error.response?.data?.message || "Login failed. Please try again.";
+      toast.error(errorMsg);
     }
   };
   // useEffect(() => {

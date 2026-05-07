@@ -2,7 +2,6 @@
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 
@@ -10,25 +9,41 @@ class AuthController extends Controller
 {
     public function login(Request $request)
     {
+        // Validate input
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|min:6'
+        ]);
+
         $credentials = $request->only('email', 'password');
 
+        // Attempt login with session
         if (!Auth::attempt($credentials)) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid credentials'
+            ], 401);
         }
 
+        // Regenerate session to prevent session fixation
         $request->session()->regenerate();
 
         return response()->json([
             'success' => true,
             'message' => 'Login successful',
-            'data' => Auth::user()
-        ]);
+            'data' => [
+                'user' => Auth::user()
+            ]
+        ], 200);
     }
+
     public function profile(Request $request)
     {
         return response()->json([
             'success' => true,
-            'data' => $request->user()
+            'data' => [
+                'user' => $request->user()
+            ]
         ]);
     }
 
@@ -41,46 +56,49 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Logged out'
+            'message' => 'Logged out successfully'
         ]);
     }
+
     public function registration(Request $request)
     {
         try {
-            // ✅ Validation (like checking req.body)
+            // Validation
             $request->validate([
                 'name' => 'required|string|max:255',
-                'email' => 'required|email|max:255',
+                'email' => 'required|email|max:255|unique:users,email',
                 'password' => 'required|min:6',
                 'DOB' => 'nullable|date',
                 'profile_image' => 'nullable|string'
             ]);
 
-            // ✅ Check existing user (like findOne)
-            $existingUser = User::where('email', $request->email)->first();
-
-            if ($existingUser) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'User with email already exist'
-                ], 409);
-            }
-
-            // ✅ Create user (like bcrypt + create)
+            // Create user
             $user = User::create([
                 'name' => trim($request->name),
                 'email' => strtolower(trim($request->email)),
                 'password' => Hash::make($request->password),
-                'DOB' => $request->DOB,
+
+                'DOB' => $request->DOB
+                    ? date('Y-m-d', strtotime($request->DOB))
+                    : null,
+
                 'profile_image' => $request->profile_image,
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'You are register successfully. Please Login',
-                'data' => $user
+                'message' => 'You are registered successfully. Please Login',
+                'data' => [
+                    'user' => $user
+                ]
             ], 201);
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

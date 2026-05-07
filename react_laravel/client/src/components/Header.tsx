@@ -7,18 +7,13 @@ function Header() {
   const navigate = useNavigate();
   const handleLogout = async () => {
     try {
-      await apiClient.post("/api/auth/logout");
-
-      toast.success("Logout successfully"); // ✅ toaster here
+      await logout();
+      toast.success("Logged out successfully");
+      navigate("/login", { replace: true });
     } catch (err) {
-      toast.error("Logout failed"); // optional error toast
+      toast.error("Logout failed");
+      navigate("/login", { replace: true });
     }
-
-    logout();
-
-    navigate("/login", {
-      replace: true,
-    });
   };
   return (
     <header className="shadow-lg">

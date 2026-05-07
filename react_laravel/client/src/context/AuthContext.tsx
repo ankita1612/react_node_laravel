@@ -1,32 +1,21 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import axios from "axios";
+import apiClient, { initializeCsrfToken } from "../utils/apiClient";
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-
-// ✅ User type
+// User type matching Laravel response
 type User = {
-  id: string;
-  first_name: string;
-  last_name: string;
+  id: number;
+  name: string;
   email: string;
-  role?: string;
+  created_at?: string;
+  updated_at?: string;
 };
 
-// ✅ API User type (backend response)
-type ApiUser = {
-  _id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  role?: string;
-};
-
-// ✅ Context type
+// Context type
 type AuthContextType = {
   user: User | null;
   loading: boolean;
-  setUserData: (user: ApiUser) => void;
-  logout: () => void;
+  setUserData: (user: User) => void;
+  logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,28 +24,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Normalize user (single source of truth)
-  const normalizeUser = (apiUser: ApiUser): User => ({
-    id: apiUser._id,
-    first_name: apiUser.first_name,
-    last_name: apiUser.last_name,
-    email: apiUser.email,
-    role: apiUser.role,
-  });
-
-  // ✅ Set user from API
-  const setUserData = (apiUser: ApiUser) => {
-    setUser(normalizeUser(apiUser));
+  // Set user data
+  const setUserData = (userData: User) => {
+    setUser(userData);
   };
 
-  // ✅ Fetch logged-in user
+  // Fetch current logged-in user
   const fetchMe = async () => {
     try {
-      const res = await axios.get(BACKEND_URL + "/api/auth/profile", {
-        withCredentials: true,
-      });
-
-      setUserData(res.data.data);
+      const res = await apiClient.get("/api/profile");
+      if (res.data.success && res.data.data?.user) {
+        setUserData(res.data.data.user);
+      }
     } catch (error) {
       setUser(null);
     } finally {
@@ -64,13 +43,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Initialize auth state on mount
   useEffect(() => {
-    fetchMe();
+    const initializeAuth = async () => {
+      // First, fetch CSRF token
+      await initializeCsrfToken();
+      // Then fetch user data
+      await fetchMe();
+    };
+
+    initializeAuth();
   }, []);
 
-  // ✅ Logout
-  const logout = () => {
-    setUser(null);
+  // Logout function - calls backend logout endpoint
+  const logout = async () => {
+    try {
+      await apiClient.post("/api/logout");
+      setUser(null);
+    } catch (error) {
+      console.error("Logout error:", error);
+      setUser(null);
+    }
   };
 
   return (
@@ -87,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// ✅ Hook
+// Hook to use auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

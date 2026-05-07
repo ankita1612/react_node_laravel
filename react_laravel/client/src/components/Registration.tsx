@@ -43,13 +43,27 @@ const Registration = () => {
 
   const onSubmit = async (data: registrationInterface) => {
     try {
-      data.status = "active";
-      const result = await apiClient.post("/api/auth/register", data);
-      toast.success(result.data.message);
-      alert(result.data.message);
-      navigate("/login");
+      // Don't send status field - Laravel doesn't expect it
+      const { confirmPassword, ...registrationData } = data;
+      await apiClient.get("/sanctum/csrf-cookie");
+
+      const result = await apiClient.post(
+        "/api/auth/register",
+        registrationData,
+      );
+
+      if (result.data.success) {
+        toast.success(result.data.message);
+        navigate("/login");
+      }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Server Error");
+      const errorMsg =
+        error.response?.data?.message ||
+        error.response?.data?.errors?.[
+          Object.keys(error.response.data.errors)[0]
+        ]?.[0] ||
+        "Registration failed. Please try again.";
+      toast.error(errorMsg);
     }
   };
 
