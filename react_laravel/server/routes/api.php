@@ -1,7 +1,7 @@
 <?php
 use App\Http\Controllers\AuthController;
 
-// Public auth routes - exclude from CSRF validation
+// Public auth routes
 Route::withoutMiddleware('auth:sanctum')->group(function () {
     Route::post('/auth/login', [AuthController::class, 'login']);
     Route::post('/auth/register', [AuthController::class, 'registration']);

@@ -13,13 +13,6 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->statefulApi();
-        
-        // Exclude public auth endpoints from CSRF verification
-        $middleware->validateCsrfTokens(except: [
-            'api/auth/login',
-            'api/auth/register',
-            'sanctum/csrf-cookie',
-        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
