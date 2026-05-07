@@ -6,11 +6,7 @@ import * as yup from "yup";
 import { useNavigate, useParams } from "react-router";
 import type { IEmployee } from "../../interface/employee.interface";
 import apiClient, { initializeCsrfToken } from "../../utils/apiClient";
-import axios from "axios";
-
-type FormDataType = {
-  multiple_image: File[];
-};
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const schema = yup.object().shape({
   first_name: yup.string().required("First name is required"),
 
@@ -255,22 +251,22 @@ function EmployeeAdd() {
   };
 
   return (
-    <div className="min-h-screen px-4 py-10 bg-gray-100">
-      <div className="max-w-2xl p-6 mx-auto bg-white shadow-md rounded-xl">
-        <h2
-          className="mb-6 text-2xl font-bold text-left text-gray-800"
-          ref={topRef}
-          tabIndex={-1}
-        >
-          Employee Add
-        </h2>
+    <div className="overflow-hidden bg-white border border-gray-200 rounded-md shadow-sm">
+      {/* HEADER */}
+      <div className="flex items-center justify-between px-6 py-3 bg-blue-400">
+        {/* LEFT */}
+        <div className="flex items-center gap-3">
+          {/* Accent line touching left border */}
+          <div className="w-1 h-6 -ml-6 rounded-r-full bg-slate-900" />
 
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className={`space-y-5 ${
-            loading ? "opacity-50 pointer-events-none" : ""
-          }`}
-        >
+          {/* Title */}
+
+          <h2 className="text-xl font-semibold">Employee</h2>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="p-6 sm:px-6 sm:py-8">
+        <div className="space-y-3 ">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <label className="block mb-1 text-sm font-medium">
@@ -280,7 +276,7 @@ function EmployeeAdd() {
               <input
                 type="text"
                 {...register("first_name")}
-                className="w-full px-4 py-2 border rounded-lg"
+                className="w-full py-2 pl-2 pr-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-300"
               />
 
               {errors.first_name && (
@@ -298,7 +294,7 @@ function EmployeeAdd() {
               <input
                 type="text"
                 {...register("last_name")}
-                className="w-full px-4 py-2 border rounded-lg"
+                className="w-full py-2 pl-2 pr-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-300"
               />
             </div>
           </div>
@@ -308,7 +304,7 @@ function EmployeeAdd() {
             <input
               type="number"
               {...register("salary")}
-              className="w-full px-4 py-2 border rounded-lg"
+              className="w-full py-2 pl-2 pr-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-300"
             />
 
             {errors.salary && (
@@ -321,7 +317,7 @@ function EmployeeAdd() {
             <input
               type="number"
               {...register("age")}
-              className="w-full px-4 py-2 border rounded-lg"
+              className="w-full py-2 pl-2 pr-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-300"
             />
           </div>
           <div>
@@ -330,7 +326,7 @@ function EmployeeAdd() {
             <input
               type="date"
               {...register("dob")}
-              className="w-full px-4 py-2 border rounded-lg"
+              className="w-full py-2 pl-2 pr-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-300"
             />
           </div>
           <div>
@@ -339,7 +335,7 @@ function EmployeeAdd() {
             <input
               type="date"
               {...register("DOJ")}
-              className="w-full px-4 py-2 border rounded-lg"
+              className="w-full py-2 pl-2 pr-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-300"
             />
           </div>
           <div>
@@ -350,7 +346,7 @@ function EmployeeAdd() {
             <textarea
               rows={4}
               {...register("description")}
-              className="w-full px-4 py-2 border rounded-lg"
+              className="w-full py-2 pl-2 pr-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-300"
             />
 
             {errors.description && (
@@ -364,7 +360,7 @@ function EmployeeAdd() {
 
             <select
               {...register("hobbies")}
-              className="w-full px-4 py-2 border rounded-lg"
+              className="w-full py-2 pl-2 pr-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-300"
               defaultValue="Football"
             >
               <option value="Cricket">Cricket</option>
@@ -460,8 +456,8 @@ function EmployeeAdd() {
               Cancel
             </button>
           </div>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
   );
 }

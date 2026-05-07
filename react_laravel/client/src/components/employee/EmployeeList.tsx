@@ -1,10 +1,10 @@
 import toast from "react-hot-toast";
 import React, { useRef, useEffect, useState, useCallback } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import type { IEmployee } from "../../interface/employee.interface";
 import EmployeeRow from "./EmployeeRow";
 import apiClient from "../../utils/apiClient";
-import { Search } from "lucide-react";
+
 import { FiSearch } from "react-icons/fi";
 import { MdClose } from "react-icons/md";
 
@@ -14,8 +14,9 @@ function EmployeeList() {
   const [search, setSearch] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [deleteAction, setDeleteAction] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
   const [pagination, setPagination] = useState({
     current_page: 1,
     last_page: 1,
@@ -34,7 +35,7 @@ function EmployeeList() {
       const { data } = await apiClient.get("/api/employee", {
         params: {
           page: pagination.current_page,
-          search,
+          search: debouncedSearch,
           sort_by: sortField,
           sort_order: sortOrder,
           per_page: pagination.per_page,
@@ -57,10 +58,19 @@ function EmployeeList() {
   }, [
     pagination.current_page,
     pagination.per_page,
-    search,
+    debouncedSearch,
     sortField,
     sortOrder,
   ]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      // setPage(1);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search]);
   const handleSort = (field: string) => {
     if (sortField === field) {
       setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
@@ -73,9 +83,9 @@ function EmployeeList() {
     fetchData();
   }, [fetchData]);
 
-  const handleDelete = (id: string, action: string) => {
+  //const handleDelete = (id: string) => {
+  const handleDelete = (id: number) => {
     setDeleteId(id);
-    setDeleteAction(action);
     setShowDeleteModal(true);
   };
   // Delete employee
@@ -114,11 +124,6 @@ function EmployeeList() {
       <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
         {/* Search */}
         <div className="relative">
-          <Search
-            size={18}
-            className="absolute text-gray-400 -translate-y-1/2 left-3 top-1/2"
-          />
-
           <input
             type="text"
             ref={searchRef}
@@ -152,113 +157,98 @@ function EmployeeList() {
 
         {/* Button */}
         <Link to="/employee/add">
-          <button className="w-full px-5 py-2.5 text-sm font-medium  bg-blue-400 rounded-xl hover:bg-blue-700 sm:w-auto">
+          <button className="w-full px-5 py-2.5 text-sm font-medium  bg-blue-500 hover:bg-blue-600 rounded-xl  sm:w-auto">
             Create Employee
           </button>
         </Link>
       </div>
 
       {/* Grid */}
-      {employeeData.length === 0 ? (
-        <div className="py-5 text-center bg-white shadow rounded-2xl">
+      {!loading && employeeData.length === 0 ? (
+        <div className="py-5 text-center bg-white">
           <p className="text-gray-500">No employees found</p>
         </div>
       ) : (
-        <div className="p-3 overflow-hidden bg-white ">
-          {/* Header Row */}
-          <div className="grid grid-cols-8 gap-4 px-6 py-4 text-xs font-semibold tracking-wide text-gray-500 uppercase border-b border-gray-200 bg-gray-50">
-            <div
-              onClick={() => handleSort("first_name")}
-              className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
-            >
-              First Name
-              {sortField === "first_name" && (
-                <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
-              )}
-            </div>
-            <div
-              onClick={() => handleSort("last_name")}
-              className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
-            >
-              Last Name
-              {sortField === "last_name" && (
-                <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
-              )}
-            </div>
-            <div
-              onClick={() => handleSort("salary")}
-              className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
-            >
-              Salary
-              {sortField === "salary" && (
-                <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
-              )}
-            </div>
-            <div
-              onClick={() => handleSort("DOB")}
-              className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
-            >
-              DOB
-              {sortField === "DOB" && (
-                <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
-              )}
-            </div>
-            <div
-              onClick={() => handleSort("DOJ")}
-              className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
-            >
-              DOJ
-              {sortField === "DOJ" && (
-                <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
-              )}
-            </div>
-            <div
-              onClick={() => handleSort("hobby")}
-              className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
-            >
-              Hobby
-              {sortField === "hobby" && (
-                <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
-              )}
-            </div>
-            <div
-              onClick={() => handleSort("status")}
-              className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
-            >
-              Status
-              {sortField === "status" && (
-                <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
-              )}
-            </div>
-            <div className="text-center">Actions</div>
-          </div>
-
-          {/* Rows */}
-          <div className="divide-y divide-gray-100">
-            {employeeData.length === 0 ? (
-              <div className="py-16 text-center">
-                <p className="text-gray-500">No employees found</p>
+        <div className="overflow-x-auto">
+          <div className="min-w-[1000px] p-3 bg-white">
+            {/* Header Row */}
+            <div className="grid grid-cols-8 gap-4 px-6 py-4 text-base font-semibold tracking-wide text-gray-900 border-b border-gray-200 bg-gray-50">
+              <div
+                onClick={() => handleSort("first_name")}
+                className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
+              >
+                First Name
+                {sortField === "first_name" && (
+                  <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
+                )}
               </div>
-            ) : (
-              employeeData.map((item) => (
+              <div
+                onClick={() => handleSort("last_name")}
+                className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
+              >
+                Last Name
+                {sortField === "last_name" && (
+                  <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
+                )}
+              </div>
+              <div
+                onClick={() => handleSort("salary")}
+                className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
+              >
+                Salary
+                {sortField === "salary" && (
+                  <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
+                )}
+              </div>
+              <div
+                onClick={() => handleSort("DOB")}
+                className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
+              >
+                DOB
+                {sortField === "DOB" && (
+                  <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
+                )}
+              </div>
+              <div
+                onClick={() => handleSort("DOJ")}
+                className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
+              >
+                DOJ
+                {sortField === "DOJ" && (
+                  <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
+                )}
+              </div>
+              <div
+                onClick={() => handleSort("hobby")}
+                className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
+              >
+                Hobby
+                {sortField === "hobby" && (
+                  <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
+                )}
+              </div>
+              <div
+                onClick={() => handleSort("status")}
+                className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
+              >
+                Status
+                {sortField === "status" && (
+                  <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
+                )}
+              </div>
+              <div className="text-center">Actions</div>
+            </div>
+
+            {/* Rows */}
+            <div className="divide-y divide-gray-100">
+              {employeeData.map((item) => (
                 <EmployeeRow
                   key={item.id}
                   employeeData={item}
                   handleDelete={handleDelete}
                 />
-              ))
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Loader */}
-      {loading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-10 h-10 border-4 border-white rounded-full border-t-transparent animate-spin"></div>
-
-            <p className="text-sm text-white">Loading...</p>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -288,22 +278,28 @@ function EmployeeList() {
           </select>
 
           <div className="text-sm text-gray-500">
-            Showing{" "}
-            <span className="font-semibold text-gray-700">
-              {(pagination.current_page - 1) * pagination.per_page + 1}
-            </span>{" "}
-            to{" "}
-            <span className="font-semibold text-gray-700">
-              {Math.min(
-                pagination.current_page * pagination.per_page,
-                pagination.total,
-              )}
-            </span>{" "}
-            of{" "}
-            <span className="font-semibold text-gray-700">
-              {pagination.total}
-            </span>{" "}
-            entries
+            {pagination.total === 0 ? (
+              "Showing 0 entries"
+            ) : (
+              <>
+                Showing{" "}
+                <span className="font-semibold text-gray-700">
+                  {(pagination.current_page - 1) * pagination.per_page + 1}
+                </span>{" "}
+                to{" "}
+                <span className="font-semibold text-gray-700">
+                  {Math.min(
+                    pagination.current_page * pagination.per_page,
+                    pagination.total,
+                  )}
+                </span>{" "}
+                of{" "}
+                <span className="font-semibold text-gray-700">
+                  {pagination.total}
+                </span>{" "}
+                entries
+              </>
+            )}
           </div>
         </div>
 

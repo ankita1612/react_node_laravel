@@ -1,7 +1,7 @@
 import { Pencil, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { IEmployee } from "../../interface/employee.interface";
-
+import React from "react";
 interface EmployeeRowProps {
   employeeData: IEmployee;
   handleDelete: (id: number) => void;
@@ -14,18 +14,8 @@ function EmployeeRow({ employeeData, handleDelete }: EmployeeRowProps) {
     navigate(`/employee/add/${employeeData.id}`);
   };
 
-  // const confirmDelete = () => {
-  //   const confirmBox = window.confirm(
-  //     "Are you sure you want to delete this employee?",
-  //   );
-
-  //   if (confirmBox) {
-  //     handleDelete(employeeData.id!);
-  //   }
-  // };
-
   return (
-    <div className="grid items-center grid-cols-8 gap-4 px-6 py-4 text-sm text-gray-600 transition hover:bg-gray-50">
+    <div className="grid items-center grid-cols-8 gap-4 px-3 py-2 text-sm text-gray-600 transition-all duration-200 hover:bg-gray-50">
       {/* First Name */}
       <div className="font-semibold ">{employeeData.first_name}</div>
 
@@ -68,6 +58,7 @@ function EmployeeRow({ employeeData, handleDelete }: EmployeeRowProps) {
       {/* Actions */}
       <div className="flex items-center justify-center gap-2">
         <button
+          aria-label="Edit employee"
           onClick={handleEdit}
           className="p-2 text-blue-600 transition rounded-lg hover:bg-blue-100"
         >
@@ -75,6 +66,7 @@ function EmployeeRow({ employeeData, handleDelete }: EmployeeRowProps) {
         </button>
 
         <button
+          aria-label="Delete employee"
           onClick={() => handleDelete(employeeData.id!)}
           className="p-2 text-red-600 transition rounded-lg hover:bg-red-100"
         >
@@ -85,4 +77,4 @@ function EmployeeRow({ employeeData, handleDelete }: EmployeeRowProps) {
   );
 }
 
-export default EmployeeRow;
+export default React.memo(EmployeeRow);
