@@ -5,7 +5,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigate, useParams } from "react-router";
 import type { IProperty } from "../../interface/Property.interface";
-import apiClient, { initializeCsrfToken } from "../../utils/apiClient";
+import apiClient from "../../utils/apiClient";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const schema = yup.object().shape({
   property_name: yup.string().required("Property name is required"),
@@ -136,7 +136,7 @@ function PropertyAdd() {
     watch,
     formState: { errors },
   } = useForm<IProperty>({
-    resolver: yupResolver(mode == "edit" ? editSchema : schema),
+    resolver: yupResolver(mode == "edit" ? schema : schema),
     defaultValues: {},
   });
   const propertyType = watch("property_type");
@@ -145,7 +145,6 @@ function PropertyAdd() {
 
   const onSubmit = async (data: IProperty) => {
     setLoading(true);
-    await initializeCsrfToken();
 
     try {
       const stored = JSON.parse(localStorage.getItem("auth_data") || "{}");
@@ -197,7 +196,7 @@ function PropertyAdd() {
         res = await apiClient.post(`/api/properties/${id}`, formData, header);
       }
       toast.success(res.data.message);
-      navigate("/properties/list");
+      navigate("/property/list");
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message ||

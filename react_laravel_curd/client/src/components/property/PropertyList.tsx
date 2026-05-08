@@ -2,14 +2,14 @@ import toast from "react-hot-toast";
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import type { IProperty } from "../../interface/Property.interface";
-import EmployeeRow from "./PropertyRow";
+import PropertyRow from "./PropertyRow";
 import apiClient from "../../utils/apiClient";
 
 import { FiSearch } from "react-icons/fi";
 import { MdClose } from "react-icons/md";
 
 function PropertyList() {
-  const [employeeData, setEmployeeData] = useState<IProperty[]>([]);
+  const [propertyData, setPropertyData] = useState<IProperty[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
@@ -27,12 +27,12 @@ function PropertyList() {
   const [sortField, setSortField] = useState("id");
 
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  // Fetch employees
+  // Fetch property
   const fetchData = useCallback(async () => {
     setLoading(true);
 
     try {
-      const { data } = await apiClient.get("/api/employee", {
+      const { data } = await apiClient.get("/api/properties", {
         params: {
           page: pagination.current_page,
           search: debouncedSearch,
@@ -42,7 +42,7 @@ function PropertyList() {
         },
       });
 
-      setEmployeeData(data.data.data);
+      setPropertyData(data.data.data);
 
       setPagination((prev) => ({
         ...prev,
@@ -51,7 +51,7 @@ function PropertyList() {
         total: data.data.total,
       }));
     } catch (error) {
-      toast.error("Failed to load employees");
+      toast.error("Failed to load property");
     } finally {
       setLoading(false);
     }
@@ -88,18 +88,18 @@ function PropertyList() {
     setDeleteId(id);
     setShowDeleteModal(true);
   };
-  // Delete employee
+  // Delete property
   const handleConfirmDelete = async () => {
     if (!deleteId) return;
 
-    const previousData = employeeData;
-    setEmployeeData((prev) => prev.filter((p) => p.id !== deleteId));
+    const previousData = propertyData;
+    setPropertyData((prev) => prev.filter((p) => p.id !== deleteId));
 
     try {
-      await apiClient.delete(`/api/employee/${deleteId}`);
-      toast.success("Employee deleted successfully");
+      await apiClient.delete(`/api/properties/${deleteId}`);
+      toast.success("Property deleted successfully");
     } catch (error: any) {
-      setEmployeeData(previousData);
+      setPropertyData(previousData);
       toast.error(error?.response?.data?.message || "Delete failed");
     } finally {
       setShowDeleteModal(false);
@@ -117,7 +117,7 @@ function PropertyList() {
 
           {/* Title */}
 
-          <h2 className="text-xl font-semibold">Employee</h2>
+          <h2 className="text-xl font-semibold">Property</h2>
         </div>
       </div>
 
@@ -127,7 +127,7 @@ function PropertyList() {
           <input
             type="text"
             ref={searchRef}
-            placeholder="Search employee..."
+            placeholder="Search property..."
             value={search}
             onChange={(e) => {
               setPagination((prev) => ({
@@ -158,15 +158,15 @@ function PropertyList() {
         {/* Button */}
         <Link to="/property/add">
           <button className="w-full px-5 py-2.5 text-sm font-medium  bg-blue-500 hover:bg-blue-600 rounded-xl  sm:w-auto">
-            Create Employee
+            Create Property
           </button>
         </Link>
       </div>
 
       {/* Grid */}
-      {!loading && employeeData.length === 0 ? (
+      {!loading && propertyData.length === 0 ? (
         <div className="py-5 text-center bg-white">
-          <p className="text-gray-500">No employees found</p>
+          <p className="text-gray-500">No property found</p>
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -174,77 +174,50 @@ function PropertyList() {
             {/* Header Row */}
             <div className="grid grid-cols-8 gap-4 px-6 py-4 text-base font-semibold tracking-wide text-gray-900 border-b border-gray-200 bg-gray-50">
               <div
-                onClick={() => handleSort("first_name")}
+                onClick={() => handleSort("property_name")}
                 className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
               >
-                First Name
-                {sortField === "first_name" && (
-                  <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
-                )}
+                Property Name
               </div>
+
               <div
-                onClick={() => handleSort("last_name")}
+                onClick={() => handleSort("property_detail")}
                 className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
               >
-                Last Name
-                {sortField === "last_name" && (
-                  <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
-                )}
+                Property Detail
               </div>
+
               <div
-                onClick={() => handleSort("salary")}
+                onClick={() => handleSort("property_type")}
                 className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
               >
-                Salary
-                {sortField === "salary" && (
-                  <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
-                )}
+                Property Type
               </div>
+
               <div
-                onClick={() => handleSort("DOB")}
+                onClick={() => handleSort("property_size")}
                 className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
               >
-                DOB
-                {sortField === "DOB" && (
-                  <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
-                )}
+                Property Size
               </div>
+
               <div
-                onClick={() => handleSort("DOJ")}
+                onClick={() => handleSort("owner_id")}
                 className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
               >
-                DOJ
-                {sortField === "DOJ" && (
-                  <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
-                )}
+                Property Owner
               </div>
-              <div
-                onClick={() => handleSort("hobby")}
-                className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
-              >
-                Hobby
-                {sortField === "hobby" && (
-                  <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
-                )}
-              </div>
-              <div
-                onClick={() => handleSort("status")}
-                className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
-              >
-                Status
-                {sortField === "status" && (
-                  <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
-                )}
-              </div>
+
+              <div className="flex items-center gap-1">Amenities</div>
               <div className="text-center">Actions</div>
             </div>
 
             {/* Rows */}
             <div className="divide-y divide-gray-100">
-              {employeeData.map((item) => (
-                <EmployeeRow
+              {propertyData.map((item) => (
+                <PropertyRow
                   key={item.id}
-                  employeeData={item}
+                  rowData={item}
                   handleDelete={handleDelete}
                 />
               ))}
@@ -393,14 +366,14 @@ function PropertyList() {
             {/* Header - Kept as requested */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200">
               <h2 className="text-lg font-semibold text-slate-800">
-                Employee Delete
+                Property Delete
               </h2>
             </div>
 
             {/* Warning Content */}
             <div className="flex-1 px-6 py-4 overflow-y-auto">
               <p className="text-sm ">
-                Are you sure you want to delete employee?
+                Are you sure you want to delete property?
               </p>
             </div>
 

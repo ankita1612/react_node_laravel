@@ -16,5 +16,4 @@ php artisan make:migration create_amenity_property_table
    api: **DIR**.'/../routes/api.php',
 
    10.RUN :chmod -R 775 storage bootstrap/cache //for linux
-
    11.create cors file

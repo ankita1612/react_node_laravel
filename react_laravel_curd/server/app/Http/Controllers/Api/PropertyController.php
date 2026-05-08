@@ -30,8 +30,11 @@ class PropertyController extends Controller
             })
             ->orderBy($sortBy, $sortOrder)
             ->paginate($perPage);
-
-        return response()->json($properties);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $properties
+        ]);
     }
 
     public function store(Request $request)
