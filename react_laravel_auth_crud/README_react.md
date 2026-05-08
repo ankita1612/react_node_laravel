@@ -10,7 +10,7 @@
 npm install -D postcss @tailwindcss/postcss autoprefixer
 npm install react-hook-form yup @hookform/resolvers
 npm install react-router-dom axios
-npm install react-toastify
+npm install react-hot-toast
 npm install lucide-react
 npm install react-icons
 🚀Step 3 :
