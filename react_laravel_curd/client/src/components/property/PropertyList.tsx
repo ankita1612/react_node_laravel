@@ -32,7 +32,7 @@ function PropertyList() {
     setLoading(true);
 
     try {
-      const { data } = await apiClient.get("/api/properties", {
+      const { data } = await apiClient.get("/api/property", {
         params: {
           page: pagination.current_page,
           search: debouncedSearch,
@@ -96,7 +96,7 @@ function PropertyList() {
     setPropertyData((prev) => prev.filter((p) => p.id !== deleteId));
 
     try {
-      await apiClient.delete(`/api/properties/${deleteId}`);
+      await apiClient.delete(`/api/property/${deleteId}`);
       toast.success("Property deleted successfully");
     } catch (error: any) {
       setPropertyData(previousData);

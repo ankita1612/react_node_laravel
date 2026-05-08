@@ -35,7 +35,19 @@ const schema = yup.object().shape({
       return value.type === "application/pdf";
     }),
 
-  photos: yup.mixed<FileList>().required("Property photos are required"),
+  photos: yup
+    .mixed<FileList>()
+    .test("required", "Property photos are required", (value) => {
+      if (mode === "edit") return true;
+      return value && value.length > 0;
+    })
+    .test("fileType", "Only JPG/PNG allowed", (value) => {
+      if (!value) return true;
+
+      return Array.from(value).every((file) =>
+        ["image/jpeg", "image/png"].includes(file.type),
+      );
+    }),
 });
 
 const editSchema = yup.object().shape({
@@ -56,6 +68,10 @@ const editSchema = yup.object().shape({
     .test("fileType", "Only PDF allowed", (value: any) => {
       if (!value) return true;
       return value.type === "application/pdf";
+    })
+    .test("fileSize", "File size must be less than 2MB", (value: any) => {
+      if (!value) return true;
+      return value.size <= 2 * 1024 * 1024;
     }),
   photos: yup.mixed<FileList>().nullable(), // Photos not required in edit mode
 });
@@ -66,26 +82,13 @@ function PropertyAdd() {
   const [mode, setMode] = useState("add");
   let navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-
-  const [preview, setPreview] = useState<string | null>(null);
-  const [existingImages, setExistingImages] = useState<string[]>([]);
   const [newImagesPreview, setNewImagesPreview] = useState<string[]>([]);
-  const [profilePreview, setProfilePreview] = useState<string | null>(null);
   const [owners, setOwners] = useState<any[]>([]);
-
   const [amenitiesList, setAmenitiesList] = useState<any[]>([]);
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
   useEffect(() => {
     if (id) setMode("edit");
   }, [id]);
-  useEffect(() => {
-    return () => {
-      if (profilePreview) URL.revokeObjectURL(profilePreview);
 
-      if (logoPreview) URL.revokeObjectURL(logoPreview);
-      newImagesPreview.forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, [profilePreview, logoPreview, newImagesPreview]);
   useEffect(() => {
     const fetchDropdowns = async () => {
       try {
@@ -114,7 +117,7 @@ function PropertyAdd() {
       const accessToken = stored?.accessToken;
 
       try {
-        const { data } = await apiClient.get(`/api/properties/${id}`, {
+        const { data } = await apiClient.get(`/api/property/${id}`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
@@ -205,17 +208,14 @@ function PropertyAdd() {
           formData.append("photos[]", photo);
         });
       }
-      // if (mode === "edit") {
-      //   formData.append("existingImages", JSON.stringify(existingImages));
-      // }
 
       let res: any;
       if (mode === "add") {
-        res = await apiClient.post(`/api/properties`, formData, header);
+        res = await apiClient.post(`/api/property`, formData, header);
       } else {
-        //res = await apiClient.put(`/api/properties/${id}`, formData, header);
+        //res = await apiClient.put(`/api/property/${id}`, formData, header);
         formData.append("_method", "PUT");
-        res = await apiClient.post(`/api/properties/${id}`, formData, header);
+        res = await apiClient.post(`/api/property/${id}`, formData, header);
       }
       toast.success(res.data.message);
       navigate("/property/list");
@@ -235,7 +235,11 @@ function PropertyAdd() {
       setLoading(false);
     }
   };
-
+  useEffect(() => {
+    if (propertyType !== "Residential") {
+      setValue("property_size", "");
+    }
+  }, [propertyType, setValue]);
   return (
     <div className="overflow-hidden bg-white border border-gray-200 rounded-md shadow-sm">
       {/* HEADER */}
@@ -247,7 +251,9 @@ function PropertyAdd() {
 
           {/* Title */}
 
-          <h2 className="text-xl font-semibold">Employee</h2>
+          <h2 className="text-xl font-semibold">
+            {mode === "edit" ? "Edit Property" : "Add Property"}
+          </h2>
         </div>
       </div>
 
@@ -524,7 +530,7 @@ function PropertyAdd() {
 
             <button
               type="button"
-              onClick={() => navigate("/properties/list")}
+              onClick={() => navigate("/property/list")}
               className="px-5 py-2 text-white bg-gray-600 rounded-lg hover:bg-gray-700"
             >
               Cancel
