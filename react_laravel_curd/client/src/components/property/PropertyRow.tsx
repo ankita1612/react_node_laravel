@@ -15,7 +15,7 @@ function PropertyRow({ rowData, handleDelete }: PropertyRowProps) {
   };
 
   return (
-    <div className="grid items-center grid-cols-8 gap-4 px-6 py-4 text-sm text-gray-600 transition-all duration-200 hover:bg-gray-50">
+    <div className="grid items-center grid-cols-6 gap-4 px-6 py-4 text-sm text-gray-600 transition-all duration-200 hover:bg-gray-50">
       <div className="font-semibold">{rowData.property_name}</div>
       <div>{rowData.property_type}</div>
       <div>{rowData.property_size || "-"}</div>

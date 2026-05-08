@@ -172,19 +172,15 @@ function PropertyList() {
         <div className="overflow-x-auto">
           <div className="min-w-[1000px] p-3 bg-white">
             {/* Header Row */}
-            <div className="grid grid-cols-8 gap-4 px-6 py-4 text-base font-semibold tracking-wide text-gray-900 border-b border-gray-200 bg-gray-50">
+            <div className="grid grid-cols-6 gap-4 px-6 py-4 text-base font-semibold tracking-wide text-gray-900 border-b border-gray-200 bg-gray-50">
               <div
                 onClick={() => handleSort("property_name")}
                 className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
               >
                 Property Name
-              </div>
-
-              <div
-                onClick={() => handleSort("property_detail")}
-                className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
-              >
-                Property Detail
+                {sortField === "property_name" && (
+                  <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
+                )}
               </div>
 
               <div
@@ -192,13 +188,19 @@ function PropertyList() {
                 className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
               >
                 Property Type
+                {sortField === "property_type" && (
+                  <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
+                )}
               </div>
 
               <div
                 onClick={() => handleSort("property_size")}
                 className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
               >
-                Property Size
+                Property Size{" "}
+                {sortField === "property_size" && (
+                  <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
+                )}
               </div>
 
               <div

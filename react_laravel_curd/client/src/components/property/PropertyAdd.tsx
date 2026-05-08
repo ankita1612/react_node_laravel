@@ -38,6 +38,28 @@ const schema = yup.object().shape({
   photos: yup.mixed<FileList>().required("Property photos are required"),
 });
 
+const editSchema = yup.object().shape({
+  property_name: yup.string().required("Property name is required"),
+  property_detail: yup.string().required("Property detail is required"),
+  property_type: yup.string().required("Property type is required"),
+  property_size: yup.string().when("property_type", {
+    is: "Residential",
+    then: (schema) => schema.required("Property size is required"),
+    otherwise: (schema) => schema.nullable(),
+  }),
+  owner_id: yup.string().required("Owner is required"),
+  amenities: yup.array().min(1, "Please select at least one amenity"),
+  property_address: yup.string().required("Property address is required"),
+  brochure: yup
+    .mixed<File>()
+    .nullable()
+    .test("fileType", "Only PDF allowed", (value: any) => {
+      if (!value) return true;
+      return value.type === "application/pdf";
+    }),
+  photos: yup.mixed<FileList>().nullable(), // Photos not required in edit mode
+});
+
 function PropertyAdd() {
   const { id } = useParams();
   const topRef = useRef<HTMLHeadingElement>(null);
@@ -136,7 +158,7 @@ function PropertyAdd() {
     watch,
     formState: { errors },
   } = useForm<IProperty>({
-    resolver: yupResolver(mode == "edit" ? schema : schema),
+    resolver: yupResolver(mode === "edit" ? editSchema : schema),
     defaultValues: {},
   });
   const propertyType = watch("property_type");
