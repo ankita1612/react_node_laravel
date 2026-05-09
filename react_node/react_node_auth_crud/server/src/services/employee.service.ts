@@ -6,15 +6,56 @@ import { Types } from "mongoose";
 export class EmployeeService {
   async createEmployee(data: IEmployee): Promise<IEmployee> {
     return Employee.create({
-      title: data.title,
-      single_image:data.single_image,
-      multiple_image: data.multiple_image,    
-      DOB:data.DOB
+      first_name: data.first_name,
+      last_name: data.last_name,
+      salary: data.salary,
+      age: data.age,
+      dob: data.dob,
+      DOJ: data.DOJ,
+      description: data.description,
+      profile_image: data.profile_image,
+      logo: data.logo,
+      hobbies: data.hobbies,
+      status: data.status
     });
   }
 
-  async getEmployees(): Promise<IEmployee[]> {
-    return Employee.find().sort({_id:-1});
+  async getEmployees(page: number = 1, perPage: number = 10, search: string = "", sortBy: string = "createdAt", sortOrder: "asc" | "desc" = "desc"): Promise<any> {
+    const skip = (page - 1) * perPage;
+    
+    // Build search filter
+    let searchFilter: any = {};
+    if (search) {
+      searchFilter = {
+        $or: [
+          { first_name: { $regex: search, $options: "i" } },
+          { last_name: { $regex: search, $options: "i" } },
+          { description: { $regex: search, $options: "i" } },
+          { hobbies: { $regex: search, $options: "i" } }
+        ]
+      };
+    }
+
+    // Build sort object
+    const sortObject: any = {};
+    sortObject[sortBy] = sortOrder === "asc" ? 1 : -1;
+
+    const total = await Employee.countDocuments(searchFilter);
+    const employees = await Employee.find(searchFilter)
+      .sort(sortObject)
+      .skip(skip)
+      .limit(perPage)
+      .lean();
+
+    const lastPage = Math.ceil(total / perPage);
+
+    return {
+      data: employees,
+      current_page: page,
+      per_page: perPage,
+      total: total,
+      last_page: lastPage
+    };
   }
 
   async getEmployee(id: string): Promise<IEmployee | null> {   
@@ -32,14 +73,30 @@ export class EmployeeService {
     if (!Types.ObjectId.isValid(id)) { 
        throw new ApiError("Invalid employee id", 400);            
     }
-    const employee = Employee.findByIdAndUpdate(
+    
+    const updateData: any = {
+      first_name: data.first_name,
+      last_name: data.last_name,
+      salary: data.salary,
+      age: data.age,
+      dob: data.dob,
+      DOJ: data.DOJ,
+      description: data.description,
+      hobbies: data.hobbies,
+      status: data.status
+    };
+
+    // Only update image fields if provided
+    if (data.profile_image) {
+      updateData.profile_image = data.profile_image;
+    }
+    if (data.logo) {
+      updateData.logo = data.logo;
+    }
+
+    const employee = await Employee.findByIdAndUpdate(
       id,
-      {
-        title: data.title,
-        DOB: data.DOB,
-        ...(data.single_image && { single_image: data.single_image }),
-        ...(data.multiple_image && { multiple_image: data.multiple_image }),
-      },
+      updateData,
       { new: true }
     );   
     if (!employee) {
@@ -55,7 +112,7 @@ export class EmployeeService {
     }
     const employee = await Employee.findByIdAndDelete(id);
     if (!employee) {
-       throw new ApiError("Post not found", 404);
+       throw new ApiError("Employee not found", 404);
     }
     return employee
   } 

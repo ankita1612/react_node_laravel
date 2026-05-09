@@ -11,7 +11,7 @@ function EmployeeRow({ employeeData, handleDelete }: EmployeeRowProps) {
   const navigate = useNavigate();
 
   const handleEdit = () => {
-    navigate(`/employee/add/${employeeData.id}`);
+    navigate(`/employee/add/${employeeData._id}`);
   };
 
   return (
@@ -67,7 +67,7 @@ function EmployeeRow({ employeeData, handleDelete }: EmployeeRowProps) {
 
         <button
           aria-label="Delete employee"
-          onClick={() => handleDelete(employeeData.id!)}
+          onClick={() => handleDelete(employeeData._id!)}
           className="p-2 text-red-600 transition rounded-lg hover:bg-red-100"
         >
           <Trash2 size={18} />

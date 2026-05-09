@@ -17,16 +17,17 @@ class EmployeeController {
         [fieldname: string]: Express.Multer.File[];
       };
       
-      let singleImagePath = files?.single_image ? files.single_image[0].path : "";    
-      const multiImagePaths = files?.multiple_image ? files.multiple_image.map(file => file.path.replace(/\\/g, "/")): [];
+      let profileImagePath = files?.profile_image ? files.profile_image[0].path : "";    
+      const logoPath = files?.logo ? files.logo[0].path : "";
 
-      singleImagePath= singleImagePath.replace(/\\/g, "/")
+      profileImagePath = profileImagePath.replace(/\\/g, "/");
+      const logoPathFormatted = logoPath.replace(/\\/g, "/");
            
       const employee = await employeeService.createEmployee({
           ...req.body,                  
-          single_image: singleImagePath,
-          multiple_image: multiImagePaths,
-          DOB: req.body.DOB,
+          profile_image: profileImagePath,
+          logo: logoPathFormatted,
+          dob: req.body.dob,
       });
       res.status(201).json({"success":true,"message":"Employee created successfully","data":employee});
     } catch (error) {
@@ -35,9 +36,19 @@ class EmployeeController {
   };
 
   getEmployees = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {     
-      const employees = await employeeService.getEmployees();
-      res.status(200).json({"success":true,"message":"","data":employees});
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const perPage = parseInt(req.query.per_page as string) || 10;
+      const search = (req.query.search as string) || "";
+      const sortBy = (req.query.sort_by as string) || "createdAt";
+      const sortOrder = (req.query.sort_order as "asc" | "desc") || "desc";
+
+      const result = await employeeService.getEmployees(page, perPage, search, sortBy, sortOrder);
+      res.status(200).json({
+        "success": true,
+        "message": "Employees fetched successfully",
+        "data": result
+      });
     } catch (error) {
       next(error);
     }
@@ -47,7 +58,7 @@ class EmployeeController {
     try {
       const { id } = req.params;     
       const employee = await employeeService.getEmployee(id);      
-      res.status(200).json({success: true,data: employee,});
+      res.status(200).json({success: true, message: "Employee fetched successfully", data: employee});
     } catch (error) {
       next(error); 
     }
@@ -59,44 +70,38 @@ updateEmployee = async (  req: Request<{ id: string }, {}, any>,  res: Response,
   try {
     const files = req.files as MulterFiles | undefined;
 
-    // 📸 Single Image
-    let singleImagePath: string = files?.single_image?.[0]?.path.replace(/\\/g, "/") || "";
+    // 📸 Profile Image
+    let profileImagePath: string = files?.profile_image?.[0]?.path.replace(/\\/g, "/") || "";
 
-    // 🖼 Multiple New Uploads
-    const multiImagePaths: string[] = files?.multiple_image
-      ? files.multiple_image.map((file) => file.path.replace(/\\/g, "/"))
-      : [];
+    // 🖼 Logo
+    let logoPath: string = files?.logo?.[0]?.path.replace(/\\/g, "/") || "";
 
     const existingEmployee = await Employee.findById(req.params.id);
     if (!existingEmployee) {
       return next(new ApiError("Employee not found", 404));
     }
 
-    // 👇 Old images user decided to KEEP
-    const existingImages: string[] = JSON.parse(req.body.existingImages || "[]");
-
-    // 👇 Final images list
-    const updatedImages: string[] = [...existingImages, ...multiImagePaths];
-
-    const dbImages: string[] = existingEmployee.multiple_image || [];
-
-const removedImages: string[] = dbImages.filter(
-  (img) => !existingImages.includes(img)
-);
-
-    // 🗑 Remove deleted files from disk
-    removedImages.forEach((img) => {
-      const fullPath = path.join(process.cwd(), img);
+    // Delete old profile image if a new one is uploaded
+    if (profileImagePath && existingEmployee.profile_image) {
+      const fullPath = path.join(process.cwd(), existingEmployee.profile_image);
       fs.unlink(fullPath, (err) => {
         if (err) console.error("Failed to delete:", fullPath);
       });
-    });
+    }
+
+    // Delete old logo if a new one is uploaded
+    if (logoPath && existingEmployee.logo) {
+      const fullPath = path.join(process.cwd(), existingEmployee.logo);
+      fs.unlink(fullPath, (err) => {
+        if (err) console.error("Failed to delete:", fullPath);
+      });
+    }
 
     const employee = await employeeService.updateEmployee(req.params.id, {
       ...req.body,
-      single_image: singleImagePath || existingEmployee.single_image,
-      multiple_image: updatedImages,
-      DOB: req.body.DOB,
+      profile_image: profileImagePath || existingEmployee.profile_image,
+      logo: logoPath || existingEmployee.logo,
+      dob: req.body.dob,
     });
 
     res.status(200).json({

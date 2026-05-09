@@ -19,8 +19,8 @@ employeeRouter.get('/:id',authentication, validateId, employeeController.getEmpl
 employeeRouter.put(
   "/:id",authentication,
   multi_upload.fields([
-    { name: "single_image", maxCount: 1 },
-    { name: "multiple_image", maxCount: 5 },
+    { name: "profile_image", maxCount: 1 },
+    { name: "logo", maxCount: 1 },
   ]),
   validateId,
   validateEdit,
@@ -29,7 +29,6 @@ employeeRouter.put(
 );
 employeeRouter.get('/static/forgraph',authentication,employeeController.staticResult)
 employeeRouter.delete('/:id',authentication,validateId, employeeController.deleteEmployee)
-//employeeRouter.deleteImage('/:id',authentication,validateId, employeeController.deleteImage)
 
 
 

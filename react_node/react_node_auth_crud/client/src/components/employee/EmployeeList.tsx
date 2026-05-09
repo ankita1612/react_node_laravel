@@ -42,7 +42,7 @@ function EmployeeList() {
         },
       });
 
-      setEmployeeData(response.data.data);
+      setEmployeeData(response.data.data.data);
 
       setPagination((prev) => ({
         ...prev,
@@ -243,7 +243,7 @@ function EmployeeList() {
             <div className="divide-y divide-gray-100">
               {employeeData.map((item) => (
                 <EmployeeRow
-                  key={item.id}
+                  key={item._id}
                   employeeData={item}
                   handleDelete={handleDelete}
                 />
