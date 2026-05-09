@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use App\Models\Employee;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Log;
 class EmployeeController extends Controller
 {
     public function index(Request $request)
@@ -31,7 +31,7 @@ class EmployeeController extends Controller
         return response()->json([
             'success' => true,
             'data' => $employees
-        ]);
+        ], 200);
     }
 
     public function store(Request $request)
@@ -116,93 +116,126 @@ class EmployeeController extends Controller
         }
     }
 
-    public function show(string $id)
+   public function show(Employee $employee)
     {
-        $employee = Employee::findOrFail($id);
-
         return response()->json([
             'success' => true,
             'data' => $employee
-        ]);
+        ], 200);
     }
 
-    public function update(Request $request, string $id)
+    public function update(Request $request, Employee $employee)
     {
-        $employee = Employee::findOrFail($id);
-
         $validated = $request->validate([
-
             'first_name' => 'required|string|max:255',
-
             'last_name' => 'nullable|string|max:255',
-
             'salary' => 'required|numeric',
-
             'age' => 'nullable|numeric',
-
             'dob' => 'required|date',
-
-            'DOJ' => 'nullable|date',
-
+            'doj' => 'nullable|date',
             'description' => 'required|string',
-
             'profile_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-
             'logo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-
             'hobbies' => 'required|in:Cricket,Football,Basket ball',
-
             'status' => 'required|in:active,inactive',
         ]);
 
-        if ($request->hasFile('profile_image')) {
-            // Delete old image
-            if ($employee->profile_image) {
-                Storage::disk('public')->delete($employee->profile_image);
-            }
+        DB::beginTransaction();
+        $newProfileImage = null;
+        $newLogo = null;
+        try {
+         
+            // Upload new profile image
+            if ($request->hasFile('profile_image')) {
+                $newProfileImage = $request
+                    ->file('profile_image')
+                    ->store('employees/profile', 'public');
 
-            // Upload new image
-            $validated['profile_image'] = $request
-                ->file('profile_image')
-                ->store('employees/profile', 'public');
-        }
-
-       if ($request->hasFile('logo')) {
-            // Delete old logo
-            if ($employee->logo) {
-                Storage::disk('public')->delete($employee->logo);
+                $validated['profile_image'] = $newProfileImage;
             }
 
             // Upload new logo
-            $validated['logo'] = $request
-                ->file('logo')
-                ->store('employees/logo', 'public');
-        }   
+            if ($request->hasFile('logo')) {
+                $newLogo = $request
+                    ->file('logo')
+                    ->store('employees/logo', 'public');
+                $validated['logo'] = $newLogo;
+            }
 
-        $employee->update($validated);
+            // Update employee
+            $employee->update($validated);
+            // Delete old profile image after successful update
+            if ($newProfileImage && $employee->getOriginal('profile_image')) {
+                Storage::disk('public')
+                    ->delete($employee->getOriginal('profile_image'));
+            }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Employee updated successfully',
-            'data' => $employee
-        ]);
+            // Delete old logo after successful update
+            if ($newLogo && $employee->getOriginal('logo')) {
+                Storage::disk('public')
+                    ->delete($employee->getOriginal('logo'));
+            }
+
+            DB::commit();
+            return response()->json([
+                'success' => true,
+                'message' => 'Employee updated successfully',
+                'data' => $employee
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            // Delete newly uploaded files if DB fails
+            if ($newProfileImage) {
+
+                Storage::disk('public')
+                    ->delete($newProfileImage);
+            }
+            if ($newLogo) {
+
+                Storage::disk('public')
+                    ->delete($newLogo);
+            }
+
+            \Log::error($e);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong'
+            ], 500);
+        }
     }
 
-    public function destroy(string $id)
+    public function destroy(Employee $employee)
     {
-        $employee = Employee::findOrFail($id);
-        if ($employee->profile_image) {
-            Storage::disk('public')->delete($employee->profile_image);
-        }
+        DB::beginTransaction();
+        try {
+            // Delete profile image
+            if ($employee->profile_image) {
+                Storage::disk('public')
+                    ->delete($employee->profile_image);
+            }
+            // Delete logo
+            if ($employee->logo) {
+                Storage::disk('public')
+                    ->delete($employee->logo);
+            }
 
-        if ($employee->logo) {
-            Storage::disk('public')->delete($employee->logo);
-        }
-        $employee->delete();
+            // Delete employee
+            $employee->delete();
+            DB::commit();
+            return response()->json([
+                'success' => true,
+                'message' => 'Employee deleted successfully'
+            ], 200);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Employee deleted successfully'
-        ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error($e);
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong'
+            ], 500);
+        }
     }
 }
