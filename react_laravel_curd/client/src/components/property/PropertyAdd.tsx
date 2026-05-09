@@ -6,6 +6,7 @@ import * as yup from "yup";
 import { useNavigate, useParams } from "react-router";
 import type { IProperty } from "../../interface/Property.interface";
 import apiClient from "../../utils/apiClient";
+import Select from "react-select";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const schema = yup.object().shape({
   property_name: yup.string().required("Property name is required"),
@@ -156,7 +157,10 @@ function PropertyAdd() {
     formState: { errors },
   } = useForm<IProperty>({
     resolver: yupResolver(mode === "edit" ? editSchema : schema),
-    defaultValues: {},
+    defaultValues: {
+      property_type: "Commercial",
+      amenities: [],
+    },
   });
   const propertyType = watch("property_type");
   // const formValues = watch();
@@ -389,28 +393,35 @@ function PropertyAdd() {
           </div>
 
           {/* Amenities */}
+          {/* Amenities */}
           <div>
             <label className="block mb-2 text-sm font-medium">
               Property Amenities <span className="text-red-500">*</span>
             </label>
 
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              {amenitiesList.map((item) => (
-                <label
-                  key={item.id}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    value={item.id}
-                    {...register("amenities")}
-                    className="w-4 h-4 text-blue-600"
-                  />
-
-                  <span className="text-sm text-gray-700">{item.name}</span>
-                </label>
-              ))}
-            </div>
+            <Select
+              isMulti
+              options={amenitiesList.map((item) => ({
+                value: String(item.id),
+                label: item.name,
+              }))}
+              value={amenitiesList
+                .filter((item) => watch("amenities")?.includes(String(item.id)))
+                .map((item) => ({
+                  value: String(item.id),
+                  label: item.name,
+                }))}
+              onChange={(selectedOptions) => {
+                setValue(
+                  "amenities",
+                  selectedOptions.map((item) => item.value),
+                  { shouldValidate: true },
+                );
+              }}
+              className="text-sm"
+              classNamePrefix="react-select"
+              placeholder="Select amenities"
+            />
 
             {errors.amenities && (
               <p className="mt-1 text-sm text-red-500">
