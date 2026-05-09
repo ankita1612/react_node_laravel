@@ -5,9 +5,10 @@ import React from "react";
 interface PropertyRowProps {
   rowData: IProperty;
   handleDelete: (id: number) => void;
+  srNo: number;
 }
 
-function PropertyRow({ rowData, handleDelete }: PropertyRowProps) {
+function PropertyRow({ rowData, handleDelete, srNo }: PropertyRowProps) {
   const navigate = useNavigate();
 
   const handleEdit = () => {
@@ -15,7 +16,8 @@ function PropertyRow({ rowData, handleDelete }: PropertyRowProps) {
   };
 
   return (
-    <div className="grid items-center grid-cols-6 gap-4 px-6 py-4 text-sm text-gray-600 transition-all duration-200 hover:bg-gray-50">
+    <div className="grid items-center grid-cols-7 gap-4 px-6 py-4 text-sm text-gray-600 transition-all duration-200 hover:bg-gray-50">
+      <div>{srNo}</div>
       <div className="font-semibold">{rowData.property_name}</div>
       <div>{rowData.property_type}</div>
       <div>{rowData.property_size || "-"}</div>
@@ -24,7 +26,7 @@ function PropertyRow({ rowData, handleDelete }: PropertyRowProps) {
         {rowData.amenities?.map((item) => (
           <span
             key={item.id}
-            className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full"
+            className="px-2 py-1 text-xs text-blue-700 bg-blue-100 rounded-full"
           >
             {item.name}
           </span>

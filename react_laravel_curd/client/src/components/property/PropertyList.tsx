@@ -172,7 +172,8 @@ function PropertyList() {
         <div className="overflow-x-auto">
           <div className="min-w-[1000px] p-3 bg-white">
             {/* Header Row */}
-            <div className="grid grid-cols-6 gap-4 px-6 py-4 text-base font-semibold tracking-wide text-gray-900 border-b border-gray-200 bg-gray-50">
+            <div className="grid grid-cols-7 gap-4 px-6 py-4 text-base font-semibold tracking-wide text-gray-900 border-b border-gray-200 bg-gray-50">
+              <div className="flex gap-1 items-left ">No.</div>
               <div
                 onClick={() => handleSort("property_name")}
                 className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
@@ -216,9 +217,14 @@ function PropertyList() {
 
             {/* Rows */}
             <div className="divide-y divide-gray-100">
-              {propertyData.map((item) => (
+              {propertyData.map((item, index) => (
                 <PropertyRow
                   key={item.id}
+                  srNo={
+                    (pagination.current_page - 1) * pagination.per_page +
+                    index +
+                    1
+                  }
                   rowData={item}
                   handleDelete={handleDelete}
                 />

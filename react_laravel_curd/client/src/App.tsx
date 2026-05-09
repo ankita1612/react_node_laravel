@@ -38,7 +38,7 @@ function App() {
         <Header />
         <main className="flex-1 p-2">
           <Routes>
-            <Route path="/" element={<Navigate to="/product/list" />} />
+            <Route path="/" element={<PropertyList />} />
             <Route path="/property/list" element={<PropertyList />} />
             <Route path="/property/add" element={<PropertyAdd />} />
             <Route path="/property/add/:id" element={<PropertyAdd />} />

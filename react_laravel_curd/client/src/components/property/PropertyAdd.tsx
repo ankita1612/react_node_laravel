@@ -37,10 +37,7 @@ const schema = yup.object().shape({
 
   photos: yup
     .mixed<FileList>()
-    .test("required", "Property photos are required", (value) => {
-      if (mode === "edit") return true;
-      return value && value.length > 0;
-    })
+    .required("Property photos are required")
     .test("fileType", "Only JPG/PNG allowed", (value) => {
       if (!value) return true;
 
@@ -73,18 +70,30 @@ const editSchema = yup.object().shape({
       if (!value) return true;
       return value.size <= 2 * 1024 * 1024;
     }),
-  photos: yup.mixed<FileList>().nullable(), // Photos not required in edit mode
+  photos: yup
+    .mixed<FileList>()
+    .nullable()
+    .test("fileType", "Only JPG/PNG allowed", (value) => {
+      if (!value || value.length === 0) return true;
+
+      return Array.from(value).every((file) =>
+        ["image/jpeg", "image/png"].includes(file.type),
+      );
+    }),
 });
 
 function PropertyAdd() {
   const { id } = useParams();
   const topRef = useRef<HTMLHeadingElement>(null);
-  const [mode, setMode] = useState("add");
+  const [mode, setMode] = useState<"add" | "edit">("add");
   let navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [newImagesPreview, setNewImagesPreview] = useState<string[]>([]);
   const [owners, setOwners] = useState<any[]>([]);
   const [amenitiesList, setAmenitiesList] = useState<any[]>([]);
+  const [existingBrochure, setExistingBrochure] = useState<string | null>(null);
+
+  const [existingImages, setExistingImages] = useState<string[]>([]);
   useEffect(() => {
     if (id) setMode("edit");
   }, [id]);
@@ -111,32 +120,17 @@ function PropertyAdd() {
 
     const fetchProperty = async () => {
       setLoading(true);
-
-      const stored = JSON.parse(localStorage.getItem("auth_data") || "{}");
-
-      const accessToken = stored?.accessToken;
-
       try {
-        const { data } = await apiClient.get(`/api/property/${id}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-
+        const { data } = await apiClient.get(`/api/property/${id}`);
         const property = data.data || data;
-
+        setExistingBrochure(property.brochure || null);
+        setExistingImages(property.photos || []);
         setValue("property_name", property.property_name);
-
         setValue("property_detail", property.property_detail);
-
         setValue("property_type", property.property_type);
-
         setValue("property_size", property.property_size);
-
         setValue("owner_id", String(property.owner_id));
-
         setValue("property_address", property.property_address);
-
         setValue(
           "amenities",
           property.amenities.map((item: any) => String(item.id)),
@@ -172,12 +166,9 @@ function PropertyAdd() {
     setLoading(true);
 
     try {
-      const stored = JSON.parse(localStorage.getItem("auth_data") || "{}");
-      const accessToken = stored?.accessToken;
       const header = {
         headers: {
           "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${accessToken}`,
         },
       };
 
@@ -240,6 +231,11 @@ function PropertyAdd() {
       setValue("property_size", "");
     }
   }, [propertyType, setValue]);
+  useEffect(() => {
+    return () => {
+      newImagesPreview.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [newImagesPreview]);
   return (
     <div className="overflow-hidden bg-white border border-gray-200 rounded-md shadow-sm">
       {/* HEADER */}
@@ -468,6 +464,18 @@ function PropertyAdd() {
                   {errors.brochure.message as string}
                 </p>
               )}
+              {mode === "edit" && existingBrochure && (
+                <div className="mt-3">
+                  <a
+                    href={`${BACKEND_URL}/storage/${existingBrochure}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-medium text-blue-600 underline hover:text-blue-800"
+                  >
+                    View Existing Brochure
+                  </a>
+                </div>
+              )}
             </div>
 
             {/* Property Photos */}
@@ -515,6 +523,25 @@ function PropertyAdd() {
                   className="object-cover w-24 h-24 border rounded-lg"
                 />
               ))}
+            </div>
+          )}
+          {/* Existing Images */}
+          {mode === "edit" && existingImages.length > 0 && (
+            <div className="mt-4">
+              <p className="mb-2 text-sm font-medium">Existing Images</p>
+
+              <div className="flex flex-wrap gap-3">
+                {existingImages.map((img, index) => (
+                  <>
+                    <img
+                      key={index}
+                      src={`${BACKEND_URL}/storage/${img.photo}`}
+                      alt="property"
+                      className="object-cover w-24 h-24 border rounded-lg"
+                    />
+                  </>
+                ))}
+              </div>
             </div>
           )}
 

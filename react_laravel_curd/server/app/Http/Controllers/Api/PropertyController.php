@@ -7,26 +7,29 @@ use App\Models\PropertyPhoto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class PropertyController extends Controller
 {
     public function index(Request $request)
     {
+        $allowedSorts = [  'id',    'property_name',    'property_type',    'created_at'];
         $search = $request->search;
-        $sortBy = $request->sort_by ?? 'id';
-        $sortOrder = $request->sort_order ?? 'desc';
-        $perPage = $request->per_page ?? 10;
+        $sortBy = in_array($request->sort_by, $allowedSorts)? $request->sort_by : 'id';
+        $sortOrder = in_array($request->sort_order, ['asc', 'desc'])? $request->sort_order: 'desc';
+        $perPage = min($request->per_page ?? 10, 100);
 
         $properties = Property::with([
-                'owner',
-                'amenities',
+                'owner:id,name',
+                'amenities:id,name',
                 'photos'
             ])
             ->when($search, function ($query) use ($search) {
-
-                $query->where('property_name', 'like', "%{$search}%")
+                $query->where(function ($q) use ($search) {
+                    $q->where('property_name', 'like', "%{$search}%")
                     ->orWhere('property_type', 'like', "%{$search}%")
                     ->orWhere('property_address', 'like', "%{$search}%");
+                });
             })
             ->orderBy($sortBy, $sortOrder)
             ->paginate($perPage);
@@ -34,49 +37,31 @@ class PropertyController extends Controller
         return response()->json([
             'success' => true,
             'data' => $properties
-        ]);
+        ], 200);
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'property_name' => 'required|max:255',
-
             'property_detail' => 'required',
-
             'property_type' => 'required|in:Residential,Commercial',
-
-            'property_size' =>
-                'nullable|required_if:property_type,Residential',
-
-            'owner_id' =>
-                'required|exists:owners,id',
-
+            'property_size' => 'nullable|required_if:property_type,Residential',
+            'owner_id' => 'required|exists:owners,id',
             'property_address' => 'required',
-
             'amenities' => 'required|array',
-
             'amenities.*' => 'exists:amenities,id',
-
-            'brochure' =>
-                'nullable|mimes:pdf|max:2048',
-
+            'brochure' => 'nullable|mimes:pdf|max:2048',
             'photos' => 'required|array',
-
-            'photos.*' =>
-                'image|mimes:jpg,jpeg,png|max:2048',
+            'photos.*' => 'image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         DB::beginTransaction();
 
         try {
-
             $brochurePath = null;
-
             if ($request->hasFile('brochure')) {
-
-                $brochurePath = $request->file('brochure')
-                    ->store('brochures', 'public');
+                $brochurePath = $request->file('brochure')->store('brochures', 'public');
             }
 
             $property = Property::create([
@@ -90,16 +75,12 @@ class PropertyController extends Controller
             ]);
 
             // amenities
-
-            $property->amenities()
-                ->sync($request->amenities);
+            $property->amenities()->sync($request->amenities);
 
             // photos
 
             if ($request->hasFile('photos')) {
-
                 foreach ($request->file('photos') as $photo) {
-
                     $photoPath = $photo->store(
                         'property-photos',
                         'public'
@@ -115,6 +96,7 @@ class PropertyController extends Controller
             DB::commit();
 
             return response()->json([
+                 'success' => true,
                 'message' => 'Property created successfully',
                 'data' => $property
             ], 201);
@@ -124,68 +106,51 @@ class PropertyController extends Controller
             DB::rollBack();
 
             return response()->json([
+                 'success' => false,
                 'message' => $e->getMessage()
             ], 500);
         }
     }
 
-    public function show($id)
+    public function show(Property $property)
     {
-        $property = Property::with([
-            'owner',
-            'amenities',
-            'photos'
-        ])->findOrFail($id);
+        $property->load([
+            'owner:id,name',
+            'amenities:id,name',
+            'photos:id,property_id,photo'
+        ]);
 
-        return response()->json($property);
+        return response()->json([
+            'success' => true,
+            'data' => $property
+        ], 200);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Property $property)
     {
-        $property = Property::findOrFail($id);
-
         $request->validate([
             'property_name' => 'required|max:255',
-
             'property_detail' => 'required',
-
             'property_type' => 'required|in:Residential,Commercial',
-
-            'property_size' =>
-                'nullable|required_if:property_type,Residential',
-
-            'owner_id' =>
-                'required|exists:owners,id',
-
+            'property_size' =>'nullable|required_if:property_type,Residential',
+            'owner_id' =>'required|exists:owners,id',
             'property_address' => 'required',
-
             'amenities' => 'required|array',
-
             'amenities.*' => 'exists:amenities,id',
-
-            'brochure' =>
-                'nullable|mimes:pdf|max:2048',
-
-            'photos.*' =>
-                'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'brochure' =>'nullable|mimes:pdf|max:2048',
+            'photos.*' =>'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         DB::beginTransaction();
 
         try {
-
             $brochurePath = $property->brochure;
-
             if ($request->hasFile('brochure')) {
-
                 if ($property->brochure) {
-
-                    Storage::disk('public')
-                        ->delete($property->brochure);
+                    Storage::disk('public')->delete($property->brochure);
                 }
 
-                $brochurePath = $request->file('brochure')
-                    ->store('brochures', 'public');
+                $brochurePath = $request->file('brochure')->store('brochures', 'public');
             }
 
             $property->update([
@@ -199,20 +164,12 @@ class PropertyController extends Controller
             ]);
 
             // amenities
-
-            $property->amenities()
-                ->sync($request->amenities);
+            $property->amenities()->sync($request->amenities);
 
             // photos
-
             if ($request->hasFile('photos')) {
-
                 foreach ($request->file('photos') as $photo) {
-
-                    $photoPath = $photo->store(
-                        'property-photos',
-                        'public'
-                    );
+                    $photoPath = $photo->store('property-photos','public' );
 
                     PropertyPhoto::create([
                         'property_id' => $property->id,
@@ -224,27 +181,61 @@ class PropertyController extends Controller
             DB::commit();
 
             return response()->json([
+                'success' => true,
                 'message' => 'Property updated successfully'
-            ]);
+            ], 200);
 
         } catch (\Exception $e) {
 
             DB::rollBack();
 
+            \Log::error($e);
+
             return response()->json([
-                'message' => $e->getMessage()
+                'success' => false,
+                'message' => 'Something went wrong'
             ], 500);
         }
     }
 
-    public function destroy($id)
+    public function destroy(Property $property)
     {
-        $property = Property::findOrFail($id);
+        DB::beginTransaction();
 
-        $property->delete();
+        try {
 
-        return response()->json([
-            'message' => 'Property deleted successfully'
-        ]);
+            foreach ($property->photos as $photo) {
+
+                Storage::disk('public')->delete($photo->photo);
+
+                $photo->delete();
+            }
+
+            if ($property->brochure) {
+
+                Storage::disk('public')
+                    ->delete($property->brochure);
+            }
+
+            $property->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Property deleted successfully'
+            ], 200);
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            \Log::error($e);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong'
+            ], 500);
+        }
     }
 }
