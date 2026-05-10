@@ -3,7 +3,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams } from "react-router-dom";
 import type { IProperty } from "../../interface/Property.interface";
 import apiClient from "../../utils/apiClient";
 import Select from "react-select";
@@ -100,54 +100,54 @@ function PropertyAdd() {
   }, [id]);
 
   useEffect(() => {
-    const fetchDropdowns = async () => {
-      try {
-        const [ownersRes, amenitiesRes] = await Promise.all([
-          apiClient.get("/api/owners"),
-          apiClient.get("/api/amenities"),
-        ]);
+    // const fetchDropdowns = async () => {
+    //   try {
+    //     const [ownersRes, amenitiesRes] = await Promise.all([
+    //       apiClient.get("/api/owners"),
+    //       apiClient.get("/api/amenities"),
+    //     ]);
 
-        setOwners(ownersRes.data.data || ownersRes.data);
+    //     setOwners(ownersRes.data.data || ownersRes.data);
 
-        setAmenitiesList(amenitiesRes.data.data || amenitiesRes.data);
-      } catch (error) {
-        toast.error("Failed to load dropdowns");
-      }
-    };
+    //     setAmenitiesList(amenitiesRes.data.data || amenitiesRes.data);
+    //   } catch (error) {
+    //     toast.error("Failed to load dropdowns");
+    //   }
+    // };
 
-    fetchDropdowns();
+    // fetchDropdowns();
 
     if (!id) return;
 
-    const fetchProperty = async () => {
-      setLoading(true);
-      try {
-        const { data } = await apiClient.get(`/api/property/${id}`);
-        const property = data.data || data;
-        setExistingBrochure(property.brochure || null);
-        setExistingImages(property.photos || []);
-        setValue("property_name", property.property_name);
-        setValue("property_detail", property.property_detail);
-        setValue("property_type", property.property_type);
-        setValue("property_size", property.property_size);
-        setValue("owner_id", String(property.owner_id));
-        setValue("property_address", property.property_address);
-        setValue(
-          "amenities",
-          property.amenities.map((item: any) => String(item.id)),
-        );
-      } catch (error: any) {
-        toast.error(
-          error?.response?.data?.message ||
-            error?.message ||
-            "Something went wrong",
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
+    // const fetchProperty = async () => {
+    //   setLoading(true);
+    //   try {
+    //     const { data } = await apiClient.get(`/api/property/${id}`);
+    //     const property = data.data || data;
+    //     setExistingBrochure(property.brochure || null);
+    //     setExistingImages(property.photos || []);
+    //     setValue("property_name", property.property_name);
+    //     setValue("property_detail", property.property_detail);
+    //     setValue("property_type", property.property_type);
+    //     setValue("property_size", property.property_size);
+    //     setValue("owner_id", String(property.owner_id));
+    //     setValue("property_address", property.property_address);
+    //     setValue(
+    //       "amenities",
+    //       property.amenities.map((item: any) => String(item.id)),
+    //     );
+    //   } catch (error: any) {
+    //     toast.error(
+    //       error?.response?.data?.message ||
+    //         error?.message ||
+    //         "Something went wrong",
+    //     );
+    //   } finally {
+    //     setLoading(false);
+    //   }
+    // };
 
-    fetchProperty();
+    //fetchProperty();
   }, [id]);
   const {
     register,
@@ -205,13 +205,13 @@ function PropertyAdd() {
       }
 
       let res: any;
-      if (mode === "add") {
-        res = await apiClient.post(`/api/property`, formData, header);
-      } else {
-        //res = await apiClient.put(`/api/property/${id}`, formData, header);
-        formData.append("_method", "PUT");
-        res = await apiClient.post(`/api/property/${id}`, formData, header);
-      }
+      // if (mode === "add") {
+      //   res = await apiClient.post(`/api/property`, formData, header);
+      // } else {
+      //   //res = await apiClient.put(`/api/property/${id}`, formData, header);
+      //   formData.append("_method", "PUT");
+      //   res = await apiClient.post(`/api/property/${id}`, formData, header);
+      // }
       toast.success(res.data.message);
       navigate("/property/list");
     } catch (error: any) {
