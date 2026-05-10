@@ -20,44 +20,47 @@ export class EmployeeService {
     });
   }
 
-  async getEmployees(page: number = 1, perPage: number = 10, search: string = "", sortBy: string = "createdAt", sortOrder: "asc" | "desc" = "desc"): Promise<any> {
-    const skip = (page - 1) * perPage;
-    
-    // Build search filter
-    let searchFilter: any = {};
-    if (search) {
-      searchFilter = {
-        $or: [
-          { first_name: { $regex: search, $options: "i" } },
-          { last_name: { $regex: search, $options: "i" } },
-          { description: { $regex: search, $options: "i" } },
-          { hobbies: { $regex: search, $options: "i" } }
-        ]
-      };
-    }
+ async getEmployees(
+  page: number = 1,
+  perPage: number = 10,
+  search: string = "",
+  sortBy: string = "createdAt",
+  sortOrder: "asc" | "desc" = "desc"
+): Promise<any> {
+  const skip = (page - 1) * perPage;
 
-    // Build sort object
-    const sortObject: any = {};
-    sortObject[sortBy] = sortOrder === "asc" ? 1 : -1;
+  let searchFilter: any = {};
 
-    const total = await Employee.countDocuments(searchFilter);
-    const employees = await Employee.find(searchFilter)
-      .sort(sortObject)
-      .skip(skip)
-      .limit(perPage)
-      .lean();
-
-    const lastPage = Math.ceil(total / perPage);
-
-    return {
-      data: employees,
-      current_page: page,
-      per_page: perPage,
-      total: total,
-      last_page: lastPage
+  if (search) {
+    searchFilter = {
+      $or: [
+        { first_name: { $regex: search, $options: "i" } },
+        { last_name: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+        { hobbies: { $regex: search, $options: "i" } },
+      ],
     };
   }
 
+  const sortObject: any = {};
+  sortObject[sortBy] = sortOrder === "asc" ? 1 : -1;
+
+  const total = await Employee.countDocuments(searchFilter);
+
+  const employees = await Employee.find(searchFilter)
+    .sort(sortObject)
+    .skip(skip)
+    .limit(perPage)
+    .lean();
+
+  return {
+    data: employees,
+    current_page: page,
+    per_page: perPage,
+    total,
+    last_page: Math.ceil(total / perPage),
+  };
+}
   async getEmployee(id: string): Promise<IEmployee | null> {   
     if (!Types.ObjectId.isValid(id)) { 
             throw new ApiError("Invalid employee id", 400);            

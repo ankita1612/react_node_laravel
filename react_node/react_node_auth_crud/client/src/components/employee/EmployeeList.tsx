@@ -24,7 +24,7 @@ function EmployeeList() {
     total: 0,
   });
 
-  const [sortField, setSortField] = useState("id");
+  const [sortField, setSortField] = useState("createdAt");
 
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   // Fetch employees

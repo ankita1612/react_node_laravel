@@ -17,23 +17,23 @@ function EmployeeRow({ employeeData, handleDelete }: EmployeeRowProps) {
   return (
     <div className="grid items-center grid-cols-8 gap-4 px-6 py-4 text-sm text-gray-600 transition-all duration-200 hover:bg-gray-50">
       {/* First Name */}
-      <div className="font-semibold ">{employeeData.first_name}</div>
+      <div className="font-semibold truncate">{employeeData.first_name}</div>
 
       {/* Last Name */}
-      <div className="">{employeeData.last_name || "-"}</div>
+      <div className="truncate">{employeeData.last_name || "-"}</div>
 
       {/* Salary */}
-      <div className="">₹ {employeeData.salary}</div>
+      <div>₹ {employeeData.salary}</div>
 
       {/* DOB */}
-      <div className="">
+      <div>
         {employeeData.dob
           ? new Date(employeeData.dob).toLocaleDateString()
           : "-"}
       </div>
 
       {/* DOJ */}
-      <div className="">
+      <div>
         {employeeData.DOJ
           ? new Date(employeeData.DOJ).toLocaleDateString()
           : "-"}

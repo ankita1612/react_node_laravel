@@ -7,21 +7,26 @@ import { useNavigate, useParams } from "react-router";
 import type { IEmployee } from "../../interface/employee.interface";
 import apiClient, { initializeCsrfToken } from "../../utils/apiClient";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-const schema = yup.object().shape({
+const baseSchema = {
   first_name: yup.string().required("First name is required"),
   last_name: yup.string().nullable(),
   salary: yup
     .number()
+    .min(0, "Salary cannot be negative")
+    .max(1000000000, "Maximum 1000000000 allowed")
     .typeError("Salary must be a number")
     .required("Salary is required"),
   age: yup
     .number()
     .nullable()
+    .min(0, "Age cannot be negative")
+    .max(200, "Maximum age is 200")
     .transform((value, originalValue) => (originalValue === "" ? null : value)),
   dob: yup
     .date()
     .nullable()
     .transform((value, originalValue) => (originalValue === "" ? null : value))
+    .max(new Date(), "DOB cannot be future date")
     .typeError("Please select valid DOB")
     .required("DOB is required"),
   DOJ: yup
@@ -31,6 +36,9 @@ const schema = yup.object().shape({
   description: yup.string().required("Description is required"),
   hobbies: yup.string().required("Hobby is required"),
   status: yup.string().required("Status is required"),
+};
+const addSchema = yup.object().shape({
+  ...baseSchema,
   profile_image: yup
     .mixed<File>()
     .required("Profile image is required")
@@ -48,36 +56,7 @@ const schema = yup.object().shape({
 });
 
 const editSchema = yup.object().shape({
-  first_name: yup.string().required("First name is required"),
-
-  last_name: yup.string().nullable(),
-
-  salary: yup
-    .number()
-    .typeError("Salary must be a number")
-    .required("Salary is required"),
-
-  age: yup
-    .number()
-    .nullable()
-    .transform((value, originalValue) => (originalValue === "" ? null : value)),
-
-  dob: yup
-    .date()
-    .nullable()
-    .transform((value, originalValue) => (originalValue === "" ? null : value))
-    .typeError("Please select valid DOB")
-    .required("DOB is required"),
-  DOJ: yup
-    .date()
-    .nullable()
-    .transform((value, originalValue) => (originalValue === "" ? null : value)),
-
-  description: yup.string().required("Description is required"),
-
-  hobbies: yup.string().required("Hobby is required"),
-
-  status: yup.string().required("Status is required"),
+  ...baseSchema,
 
   profile_image: yup
     .mixed<File>()
@@ -99,16 +78,10 @@ const editSchema = yup.object().shape({
 });
 function EmployeeAdd() {
   const { id } = useParams();
-  const topRef = useRef<HTMLHeadingElement>(null);
   const [mode, setMode] = useState("add");
   let navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-
-  const [preview, setPreview] = useState<string | null>(null);
-  const [existingImages, setExistingImages] = useState<string[]>([]);
-  const [newImagesPreview, setNewImagesPreview] = useState<string[]>([]);
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
-
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   useEffect(() => {
     if (id) setMode("edit");
@@ -118,22 +91,14 @@ function EmployeeAdd() {
       if (profilePreview) URL.revokeObjectURL(profilePreview);
 
       if (logoPreview) URL.revokeObjectURL(logoPreview);
-      newImagesPreview.forEach((url) => URL.revokeObjectURL(url));
     };
-  }, [profilePreview, logoPreview, newImagesPreview]);
+  }, [profilePreview, logoPreview]);
   useEffect(() => {
     if (!id) return;
     const fetchEmployee = async () => {
       setLoading(true);
-      const stored = JSON.parse(localStorage.getItem("auth_data") || "{}");
-      const accessToken = stored?.accessToken;
       try {
-        const { data } = await apiClient.get(`api/employee/${id}`, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
+        const { data } = await apiClient.get(`api/employee/${id}`);
 
         setValue("first_name", data.data.first_name);
         setValue("last_name", data.data.last_name);
@@ -143,7 +108,6 @@ function EmployeeAdd() {
         setValue("hobbies", data.data.hobbies);
         setValue("status", data.data.status);
 
-        setExistingImages(data.data.profile_image);
         if (data.data.profile_image) {
           setProfilePreview(
             `${BACKEND_URL}/storage/${data.data.profile_image}`,
@@ -181,7 +145,7 @@ function EmployeeAdd() {
 
     formState: { errors },
   } = useForm<IEmployee>({
-    resolver: yupResolver(mode == "edit" ? editSchema : schema),
+    resolver: yupResolver(mode == "edit" ? editSchema : addSchema),
     defaultValues: {},
   });
   // const formValues = watch();
@@ -192,17 +156,7 @@ function EmployeeAdd() {
     await initializeCsrfToken();
 
     try {
-      const stored = JSON.parse(localStorage.getItem("auth_data") || "{}");
-      const accessToken = stored?.accessToken;
-      const header = {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${accessToken}`,
-        },
-      };
-
       const formData = new FormData();
-
       formData.append("first_name", data.first_name);
       formData.append("last_name", data.last_name || "");
       formData.append("salary", String(data.salary));
@@ -242,11 +196,10 @@ function EmployeeAdd() {
 
       let res: any;
       if (mode === "add") {
-        res = await apiClient.post(`/api/employee`, formData, header);
+        res = await apiClient.post(`/api/employee`, formData);
       } else {
-        //res = await apiClient.put(`/api/employee/${id}`, formData, header);
         formData.append("_method", "PUT");
-        res = await apiClient.post(`/api/employee/${id}`, formData, header);
+        res = await apiClient.post(`/api/employee/${id}`, formData);
       }
       toast.success(res.data.message);
       navigate("/employee/list");
@@ -282,7 +235,11 @@ function EmployeeAdd() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="p-6 sm:px-6 sm:py-8">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="p-6 sm:px-6 sm:py-8"
+        noValidate
+      >
         <div className="space-y-3 ">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
@@ -293,6 +250,7 @@ function EmployeeAdd() {
               <input
                 type="text"
                 {...register("first_name")}
+                maxLength={30}
                 className="w-full py-2 pl-2 pr-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-300"
               />
 
@@ -310,6 +268,7 @@ function EmployeeAdd() {
 
               <input
                 type="text"
+                maxLength={30}
                 {...register("last_name")}
                 className="w-full py-2 pl-2 pr-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-300"
               />
@@ -322,6 +281,7 @@ function EmployeeAdd() {
 
             <input
               type="number"
+              max={1000000000}
               {...register("salary")}
               className="w-full py-2 pl-2 pr-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-300"
             />
@@ -335,6 +295,7 @@ function EmployeeAdd() {
 
             <input
               type="number"
+              max={200}
               {...register("age")}
               className="w-full py-2 pl-2 pr-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-300"
             />
