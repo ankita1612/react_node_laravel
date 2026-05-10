@@ -1,85 +1,68 @@
 import User from "../models/user.model";
-import RefreshToken from "../models/refresh.model";
-import  IUser ,{ILoginResponse, ILogin}  from "../interface/user.interface";
+import IUser, { ILoginResponse, ILogin } from "../interface/user.interface";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken"
-import  ApiError  from "../utils/api.error";
-import crypto from "crypto";
+import jwt from "jsonwebtoken";
+import ApiError from "../utils/api.error";
 
 export class AuthService {
-  async register(data: IUser ): Promise<IUser> {
-    const result  = await User.findOne({"email":data.email})
-    if(result){      
+  async register(data: IUser): Promise<IUser> {
+    const result = await User.findOne({ email: data.email });
+
+    if (result) {
       throw new ApiError("User with email already exist", 409);
     }
+
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
-    let user = await User.create({
+    const user = await User.create({
       name: data.name.trim(),
       email: data.email.toLowerCase().trim(),
       password: hashedPassword,
       DOB: data.DOB,
-      profile_image: data.profile_image
+      profile_image: data.profile_image,
     });
+
     return user;
   }
   
   async login(data: ILogin): Promise<ILoginResponse> {
     const user = await User.findOne({
       email: data.email,
-      role: { $in: ["Admin","User"] },
+      role: { $in: ["Admin", "User"] },
     });
 
     if (!user) {
       throw new ApiError("User not exist", 404);
     }
 
-    const passwordMatched = await bcrypt.compare(data.password, user.password);
+    const passwordMatched = await bcrypt.compare(
+      data.password,
+      user.password,
+    );
+
     if (!passwordMatched) {
       throw new ApiError("Invalid password", 401);
     }
 
-    if (!process.env.ACCESS_SECRET || !process.env.REFRESH_SECRET) {
-      throw new ApiError("ACCESS_SECRET or REFRESH_SECRET not configured", 500);
+    if (!process.env.ACCESS_SECRET) {
+      throw new ApiError("ACCESS_SECRET not configured", 500);
     }
 
     const adminToken = jwt.sign(
       { id: user._id, role: user.role },
-      process.env.ACCESS_SECRET!,
+      process.env.ACCESS_SECRET,
       { expiresIn: "1d" },
     );
 
     const userObj = user.toObject();
-    delete (userObj as any).password; // ✅ Remove password from response
 
-    return { user: userObj, adminToken };
+    delete (userObj as any).password;
+
+    return {
+      user: userObj,
+      adminToken,
+    };
   }
-
-
-  async refreshAccessToken(incomingToken: string)  {
-    if (!incomingToken) throw new ApiError("No refresh token", 401);
-
-    const hashedToken = crypto.createHash("sha256").update(incomingToken).digest("hex");
-
-    const stored = await RefreshToken.findOne({ token: hashedToken });
-    if (!stored) throw new ApiError("Invalid session", 403);
-
-    // Verify JWT integrity
-    const decoded: any = jwt.verify(incomingToken, process.env.REFRESH_SECRET!);
-    
-    if (stored.expiresAt < new Date()) {
-      throw new ApiError("Refresh token expired", 403);
-    }
-
-    const newAccessToken = jwt.sign({ id: decoded.id },process.env.ACCESS_SECRET!,{ expiresIn: "15m" });
-
-    return newAccessToken;
-  };
-
-  async logout (refreshToken?: string): Promise<void> {
-    if (!refreshToken) return;
-    const hashed = crypto.createHash("sha256").update(refreshToken).digest("hex");
-    await RefreshToken.deleteOne({ token: hashed });
-  };
 }
+
 export const authService = new AuthService();

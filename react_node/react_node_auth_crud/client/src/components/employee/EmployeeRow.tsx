@@ -4,7 +4,7 @@ import type { IEmployee } from "../../interface/employee.interface";
 import React from "react";
 interface EmployeeRowProps {
   employeeData: IEmployee;
-  handleDelete: (id: number) => void;
+  handleDelete: (id: string) => void;
   srNo: number;
 }
 

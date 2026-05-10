@@ -1,5 +1,4 @@
 import toast from "react-hot-toast";
-import apiClient from "../utils/apiClient";
 import { useAuth } from "./../context/AuthContext";
 import { NavLink, useNavigate } from "react-router-dom";
 function Header() {

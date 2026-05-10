@@ -14,7 +14,7 @@ function EmployeeList() {
   const [search, setSearch] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const [pagination, setPagination] = useState({
@@ -83,8 +83,7 @@ function EmployeeList() {
     fetchData();
   }, [fetchData]);
 
-  //const handleDelete = (id: string) => {
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     setDeleteId(id);
     setShowDeleteModal(true);
   };
@@ -93,7 +92,7 @@ function EmployeeList() {
     if (!deleteId) return;
 
     const previousData = employeeData;
-    setEmployeeData((prev) => prev.filter((p) => p.id !== deleteId));
+    setEmployeeData((prev) => prev.filter((p) => p._id !== deleteId));
 
     try {
       await apiClient.delete(`/api/employee/${deleteId}`);

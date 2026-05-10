@@ -1,14 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import {authService} from "../services/auth.service";
 import IUser, {ILogin} from "../interface/user.interface";
-import  ApiError  from "../utils/api.error";
 
-const cookieOptions = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",  //secure: true work on https only
-  sameSite: "lax" as const,
-  path: "/", 
-};
 class AuthController {
     register = async (req: Request<{}, {},IUser>, res: Response, next: NextFunction): Promise<void> => {
       try {        
@@ -36,9 +29,10 @@ class AuthController {
         
       res.cookie("adminToken", adminToken, {
         httpOnly: true,
-        secure: false, // ⚠️ Set true in production with HTTPS
+        secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
-        maxAge: 24 * 60 * 60 * 1000, // 1 days
+        path: "/",
+        maxAge: 24 * 60 * 60 * 1000,        
       });
 
       res
@@ -55,28 +49,35 @@ class AuthController {
       data:  (req as any).user
     });
   };
-    refresh = async (req: Request, res: Response, next: NextFunction): Promise<void> =>{    
-      try {
-        const token = req.cookies?.refreshToken;
-          if (!token) 
-            return next(new ApiError("No refresh token", 401));
+    // refresh = async (req: Request, res: Response, next: NextFunction): Promise<void> =>{    
+    //   try {
+    //     const token = req.cookies?.refreshToken;
+    //       if (!token) 
+    //         return next(new ApiError("No refresh token", 401));
 
-        const accessToken = await  authService.refreshAccessToken(token);
-        res.status(200).json({"success":true,"accessToken":accessToken});
+    //     const accessToken = await  authService.refreshAccessToken(token);
+    //     res.status(200).json({"success":true,"accessToken":accessToken});
+    //   } catch (err) {
+    //     next(err);
+    //   }
+    // }
+    logout = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      try {
+        res.clearCookie("adminToken", {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+        });
+
+        res.status(200).json({
+          success: true,
+          message: "Logout successfully",
+        });
       } catch (err) {
         next(err);
       }
-    }
-    logout = async (req: Request, res: Response, next: NextFunction) => {
-      try {
-        const refreshToken = req.cookies.refreshToken;
-        await authService.logout(refreshToken);
-        res.clearCookie("refreshToken", cookieOptions);
-        return res.status(200).json({ success: true });
-      } catch (err) {
-          next(err);
-      }
-    }
+    };
 }
 export const authController = new AuthController();
  
