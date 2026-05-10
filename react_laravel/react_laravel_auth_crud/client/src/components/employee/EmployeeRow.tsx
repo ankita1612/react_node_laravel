@@ -5,9 +5,10 @@ import React from "react";
 interface EmployeeRowProps {
   employeeData: IEmployee;
   handleDelete: (id: number) => void;
+  srNo: number;
 }
 
-function EmployeeRow({ employeeData, handleDelete }: EmployeeRowProps) {
+function EmployeeRow({ employeeData, handleDelete, srNo }: EmployeeRowProps) {
   const navigate = useNavigate();
 
   const handleEdit = () => {
@@ -15,7 +16,9 @@ function EmployeeRow({ employeeData, handleDelete }: EmployeeRowProps) {
   };
 
   return (
-    <div className="grid items-center grid-cols-8 gap-4 px-6 py-4 text-sm text-gray-600 transition-all duration-200 hover:bg-gray-50">
+    <div className="grid grid-cols-[60px_1fr_1fr_1fr_1fr_1fr_1fr_1fr_120px] items-center  gap-4 px-6 py-4 text-sm text-gray-600 transition-all duration-200 hover:bg-gray-50">
+      {/* First Name */}
+      <div>{srNo}</div>
       {/* First Name */}
       <div className="font-semibold truncate">{employeeData.first_name}</div>
 

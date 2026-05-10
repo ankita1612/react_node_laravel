@@ -172,7 +172,8 @@ function EmployeeList() {
         <div className="overflow-x-auto">
           <div className="min-w-[1000px] p-3 bg-white">
             {/* Header Row */}
-            <div className="grid grid-cols-8 gap-4 px-6 py-4 text-base font-semibold tracking-wide text-gray-900 border-b border-gray-200 bg-gray-50">
+            <div className="grid grid-cols-[60px_1fr_1fr_1fr_1fr_1fr_1fr_1fr_120px] gap-4 px-6 py-4 text-base font-semibold tracking-wide text-gray-900 border-b border-gray-200 bg-gray-50">
+              <div>Sr No</div>
               <div
                 onClick={() => handleSort("first_name")}
                 className="flex items-center gap-1 cursor-pointer select-none hover:text-gray-800"
@@ -241,11 +242,16 @@ function EmployeeList() {
 
             {/* Rows */}
             <div className="divide-y divide-gray-100">
-              {employeeData.map((item) => (
+              {employeeData.map((item, index) => (
                 <EmployeeRow
                   key={item._id}
                   employeeData={item}
                   handleDelete={handleDelete}
+                  srNo={
+                    (pagination.current_page - 1) * pagination.per_page +
+                    index +
+                    1
+                  }
                 />
               ))}
             </div>

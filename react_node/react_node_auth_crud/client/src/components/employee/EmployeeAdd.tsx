@@ -8,14 +8,19 @@ import type { IEmployee } from "../../interface/employee.interface";
 import apiClient from "../../utils/apiClient";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const baseSchema = {
-  first_name: yup.string().required("First name is required"),
-  last_name: yup.string().nullable(),
+  first_name: yup
+    .string()
+    .trim()
+    .required("First name is required")
+    .min(2, "Minimum 2 characters")
+    .max(30, "Maximum 30 characters"),
+  last_name: yup.string().trim().max(30, "Maximum 30 characters").nullable(),
   salary: yup
     .number()
+    .required("Salary is required")
     .min(0, "Salary cannot be negative")
     .max(1000000000, "Maximum 1000000000 allowed")
-    .typeError("Salary must be a number")
-    .required("Salary is required"),
+    .typeError("Salary must be a number"),
   age: yup
     .number()
     .nullable()
@@ -33,7 +38,12 @@ const baseSchema = {
     .date()
     .nullable()
     .transform((value, originalValue) => (originalValue === "" ? null : value)),
-  description: yup.string().required("Description is required"),
+  description: yup
+    .string()
+    .trim()
+    .required("Description is required")
+    .min(10, "Minimum 10 characters")
+    .max(500, "Maximum 500 characters"),
   hobbies: yup.string().required("Hobby is required"),
   status: yup.string().required("Status is required"),
 };
@@ -54,7 +64,6 @@ const addSchema = yup.object().shape({
     }),
   logo: yup.mixed().nullable(),
 });
-
 const editSchema = yup.object().shape({
   ...baseSchema,
 
@@ -78,27 +87,27 @@ const editSchema = yup.object().shape({
 });
 function EmployeeAdd() {
   const { id } = useParams();
-  const [mode, setMode] = useState("add");
+
   let navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  useEffect(() => {
-    if (id) setMode("edit");
-  }, [id]);
+
   useEffect(() => {
     return () => {
-      if (profilePreview) URL.revokeObjectURL(profilePreview);
+      if (profilePreview?.startsWith("blob:")) {
+        URL.revokeObjectURL(profilePreview);
+      }
 
-      if (logoPreview) URL.revokeObjectURL(logoPreview);
+      if (logoPreview?.startsWith("blob:")) {
+        URL.revokeObjectURL(logoPreview);
+      }
     };
   }, [profilePreview, logoPreview]);
   useEffect(() => {
     if (!id) return;
     const fetchEmployee = async () => {
       setLoading(true);
-      const stored = JSON.parse(localStorage.getItem("auth_data") || "{}");
-
       try {
         const response = await apiClient.get(`api/employee/${id}`);
 
@@ -140,6 +149,8 @@ function EmployeeAdd() {
 
     fetchEmployee();
   }, [id]);
+  const isEdit = Boolean(id);
+
   const {
     register,
     handleSubmit,
@@ -147,8 +158,13 @@ function EmployeeAdd() {
 
     formState: { errors },
   } = useForm<IEmployee>({
-    resolver: yupResolver(mode == "edit" ? editSchema : addSchema),
-    defaultValues: {},
+    resolver: yupResolver(isEdit ? editSchema : addSchema),
+    defaultValues: {
+      first_name: "",
+      last_name: "",
+      hobbies: "Football",
+      status: "active",
+    },
   });
   // const formValues = watch();
   // console.log(formValues);
@@ -197,10 +213,10 @@ function EmployeeAdd() {
       // }
 
       let res: any;
-      if (mode === "add") {
-        res = await apiClient.post(`/api/employee`, formData);
-      } else {
+      if (isEdit) {
         res = await apiClient.put(`/api/employee/${id}`, formData);
+      } else {
+        res = await apiClient.post(`/api/employee`, formData);
       }
       toast.success(res.data.message);
       navigate("/employee/list");
@@ -210,7 +226,6 @@ function EmployeeAdd() {
           error?.message ||
           "Something went wrong",
       );
-      window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setLoading(false);
     }
@@ -359,7 +374,6 @@ function EmployeeAdd() {
                   type="radio"
                   value="active"
                   {...register("status")}
-                  defaultChecked
                   className="w-4 h-4 text-blue-600"
                 />
                 <span className="text-sm text-gray-700">Active</span>
