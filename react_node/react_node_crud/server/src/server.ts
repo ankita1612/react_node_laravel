@@ -11,6 +11,9 @@ import cookieParser from "cookie-parser";
 
 import connectDB from "./config/db.config";
 import propertyRouter from "./routes/property.route";
+import ownerRouter from "./routes/owner.routes";
+import amenityRouter from "./routes/amenity.routes";
+
 import errorHandler from "./middleware/error.handler";
 import  ApiError  from "./utils/api.error";
 
@@ -26,6 +29,9 @@ app.use(rateLimit({windowMs: 15 * 60 * 1000,max: 100,}));//One IP can only make 
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use("/api/property", propertyRouter);
+app.use("/api/owners", ownerRouter);
+
+app.use("/api/amenities", amenityRouter);
 
 app.use('/uploads', (req, res, next) => {
   res.header('Access-Control-Allow-Origin', process.env.FRONTEND_URL || '*');

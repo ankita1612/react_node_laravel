@@ -93,7 +93,7 @@ function PropertyList() {
     if (!deleteId) return;
 
     const previousData = propertyData;
-    setPropertyData((prev) => prev.filter((p) => p.id !== deleteId));
+    setPropertyData((prev) => prev.filter((p) => p._id !== deleteId));
 
     try {
       await apiClient.delete(`/api/property/${deleteId}`);
@@ -219,7 +219,7 @@ function PropertyList() {
             <div className="divide-y divide-gray-100">
               {propertyData.map((item, index) => (
                 <PropertyRow
-                  key={item.id}
+                  key={item._id}
                   srNo={
                     (pagination.current_page - 1) * pagination.per_page +
                     index +

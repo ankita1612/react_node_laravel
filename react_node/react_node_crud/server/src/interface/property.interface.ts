@@ -1,5 +1,5 @@
 import mongoose, { Document } from "mongoose";
-export interface IProperty extends Document {
+export default interface IProperty extends Document {
   property_name: string;
   property_detail: string;
   property_type: "Residential" | "Commercial";

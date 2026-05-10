@@ -5,9 +5,11 @@ const propertyRouter = express.Router()
 
 import {multi_upload} from "../middleware/multiupload.middleware";
 
-propertyRouter.post("/", multi_upload.fields([
-    { name: "profile_image", maxCount: 1 },
-    { name: "logo", maxCount: 1 },
+propertyRouter.post(
+  "/",
+  multi_upload.fields([
+    { name: "brochure", maxCount: 1 },
+    { name: "photos", maxCount: 10 },
   ]),
   validateAdd,
   isRequestValidated,
@@ -18,8 +20,8 @@ propertyRouter.get('/:id', validateId, propertyController.getProperty)
 propertyRouter.put(
   "/:id",
   multi_upload.fields([
-    { name: "profile_image", maxCount: 1 },
-    { name: "logo", maxCount: 1 },
+    { name: "brochure", maxCount: 1 },
+    { name: "photos", maxCount: 10 },
   ]),
   validateId,
   validateEdit,

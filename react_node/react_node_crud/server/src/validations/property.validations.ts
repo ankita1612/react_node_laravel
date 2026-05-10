@@ -10,15 +10,31 @@ export const validateAdd = [
     body("property_name").notEmpty(),
   body("property_detail").notEmpty(),
   body("property_type").isIn(["Residential", "Commercial"]),
-  body("property_owner").notEmpty(),
+ body("owner_id")
+  .notEmpty()
+  .withMessage("Owner is required")
+  .isMongoId()
+  .withMessage("Invalid owner id"),
   body("property_address").notEmpty(),
+  body("amenities")
+  .optional()
+  .isArray()
+  .withMessage("Amenities must be array"),
 ];
 export const validateEdit = [
     body("property_name").notEmpty(),
   body("property_detail").notEmpty(),
   body("property_type").isIn(["Residential", "Commercial"]),
-  body("property_owner").notEmpty(),
+ body("owner_id")
+  .notEmpty()
+  .withMessage("Owner is required")
+  .isMongoId()
+  .withMessage("Invalid owner id"),
   body("property_address").notEmpty(),
+  body("amenities")
+  .optional()
+  .isArray()
+  .withMessage("Amenities must be array"),
 ];
 export const isRequestValidated = (req: Request, res: Response, next: NextFunction): void => {
   const errors = validationResult(req);

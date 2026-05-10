@@ -3,7 +3,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams } from "react-router-dom";
 import type { IProperty } from "../../interface/Property.interface";
 import apiClient from "../../utils/apiClient";
 import Select from "react-select";
@@ -100,52 +100,54 @@ function PropertyAdd() {
   }, [id]);
 
   useEffect(() => {
-    const fetchDropdowns = async () => {
-      try {
-        const [ownersRes, amenitiesRes] = await Promise.all([
-          apiClient.get("/api/owners"),
-          apiClient.get("/api/amenities"),
-        ]);
+    // const fetchDropdowns = async () => {
+    //   try {
+    //     const [ownersRes, amenitiesRes] = await Promise.all([
+    //       apiClient.get("/api/owners"),
+    //       apiClient.get("/api/amenities"),
+    //     ]);
 
-        setOwners(ownersRes.data.data || ownersRes.data);
+    //     setOwners(ownersRes.data.data || ownersRes.data);
 
-        setAmenitiesList(amenitiesRes.data.data || amenitiesRes.data);
-      } catch (error) {
-        toast.error("Failed to load dropdowns");
-      }
-    };
+    //     setAmenitiesList(amenitiesRes.data.data || amenitiesRes.data);
+    //   } catch (error) {
+    //     toast.error("Failed to load dropdowns");
+    //   }
+    // };
 
-    fetchDropdowns();
+    // fetchDropdowns();
 
     if (!id) return;
 
-    const fetchProperty = async () => {
-      setLoading(true);
-      try {
-        const { data } = await apiClient.get(`/api/property/${id}`);
-        const property = data.data || data;
-        setExistingBrochure(property.brochure || null);
-        setExistingImages(property.photos || []);
-        setValue("property_name", property.property_name);
-        setValue("property_detail", property.property_detail);
-        setValue("property_type", property.property_type);
-        setValue("property_size", property.property_size);
-        setValue("owner_id", property.owner_id?._id || "");
+    // const fetchProperty = async () => {
+    //   setLoading(true);
+    //   try {
+    //     const { data } = await apiClient.get(`/api/property/${id}`);
+    //     const property = data.data || data;
+    //     setExistingBrochure(property.brochure || null);
+    //     setExistingImages(property.photos || []);
+    //     setValue("property_name", property.property_name);
+    //     setValue("property_detail", property.property_detail);
+    //     setValue("property_type", property.property_type);
+    //     setValue("property_size", property.property_size);
+    //     setValue("owner_id", String(property.owner_id));
+    //     setValue("property_address", property.property_address);
+    //     setValue(
+    //       "amenities",
+    //       property.amenities.map((item: any) => String(item.id)),
+    //     );
+    //   } catch (error: any) {
+    //     toast.error(
+    //       error?.response?.data?.message ||
+    //         error?.message ||
+    //         "Something went wrong",
+    //     );
+    //   } finally {
+    //     setLoading(false);
+    //   }
+    // };
 
-        setValue("amenities", property.amenities || []);
-        setValue("property_address", property.property_address);
-      } catch (error: any) {
-        toast.error(
-          error?.response?.data?.message ||
-            error?.message ||
-            "Something went wrong",
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProperty();
+    //fetchProperty();
   }, [id]);
   const {
     register,
@@ -182,16 +184,14 @@ function PropertyAdd() {
 
       formData.append("property_type", data.property_type);
 
-      if (data.property_type === "Residential") {
-        formData.append("property_size", data.property_size);
-      }
+      formData.append("property_size", data.property_size || "");
 
       formData.append("owner_id", data.owner_id);
 
       formData.append("property_address", data.property_address);
 
       data.amenities.forEach((item) => {
-        formData.append("amenities", item);
+        formData.append("amenities[]", item);
       });
 
       if (data.brochure instanceof File) {
@@ -200,16 +200,18 @@ function PropertyAdd() {
 
       if (data.photos) {
         Array.from(data.photos).forEach((photo) => {
-          formData.append("photos", photo);
+          formData.append("photos[]", photo);
         });
       }
 
       let res: any;
-      if (mode === "add") {
-        res = await apiClient.post(`/api/property`, formData, header);
-      } else {
-        res = await apiClient.put(`/api/property/${id}`, formData, header);
-      }
+      // if (mode === "add") {
+      //   res = await apiClient.post(`/api/property`, formData, header);
+      // } else {
+      //   //res = await apiClient.put(`/api/property/${id}`, formData, header);
+      //   formData.append("_method", "PUT");
+      //   res = await apiClient.post(`/api/property/${id}`, formData, header);
+      // }
       toast.success(res.data.message);
       navigate("/property/list");
     } catch (error: any) {
@@ -357,7 +359,7 @@ function PropertyAdd() {
                 <option value="">Select Owner</option>
 
                 {owners.map((owner) => (
-                  <option key={owner._id} value={owner._id}>
+                  <option key={owner.id} value={owner.id}>
                     {owner.name}
                   </option>
                 ))}
@@ -400,15 +402,13 @@ function PropertyAdd() {
             <Select
               isMulti
               options={amenitiesList.map((item) => ({
-                value: String(item.name),
+                value: String(item.id),
                 label: item.name,
               }))}
               value={amenitiesList
-                .filter((item) =>
-                  watch("amenities")?.includes(String(item.name)),
-                )
+                .filter((item) => watch("amenities")?.includes(String(item.id)))
                 .map((item) => ({
-                  value: String(item.name),
+                  value: String(item.id),
                   label: item.name,
                 }))}
               onChange={(selectedOptions) => {
@@ -478,7 +478,7 @@ function PropertyAdd() {
               {mode === "edit" && existingBrochure && (
                 <div className="mt-3">
                   <a
-                    href={`${BACKEND_URL}/${existingBrochure}`}
+                    href={`${BACKEND_URL}/storage/${existingBrochure}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm font-medium text-blue-600 underline hover:text-blue-800"
@@ -543,12 +543,14 @@ function PropertyAdd() {
 
               <div className="flex flex-wrap gap-3">
                 {existingImages.map((img, index) => (
-                  <img
-                    key={index}
-                    src={`${BACKEND_URL}/${img}`}
-                    alt="property"
-                    className="object-cover w-24 h-24 border rounded-lg"
-                  />
+                  <>
+                    <img
+                      key={index}
+                      src={`${BACKEND_URL}/storage/${img.photo}`}
+                      alt="property"
+                      className="object-cover w-24 h-24 border rounded-lg"
+                    />
+                  </>
                 ))}
               </div>
             </div>

@@ -4,47 +4,125 @@ import fs from "fs";
 import crypto from "crypto";
 import ApiError from "../utils/api.error";
 
-//const uploadPath = path.join(__dirname, "..", "..", "uploads");
-const uploadPath ="uploads"
+const uploadPath = "uploads";
 
-// Ensure folder exists
+// Ensure upload folder exists
 if (!fs.existsSync(uploadPath)) {
   fs.mkdirSync(uploadPath, { recursive: true });
 }
 
 const storage = multer.diskStorage({
-  destination: (_, __, cb) => cb(null, uploadPath),
+  destination: (_, __, cb) => {
+    cb(null, uploadPath);
+  },
 
   filename: (_, file, cb) => {
     const ext = path.extname(file.originalname);
     const uniqueName = `${crypto.randomUUID()}${ext}`;
+
     cb(null, uniqueName);
   },
 });
 
-// Secure file filter
-const fileFilter: multer.Options["fileFilter"] = (req, file, cb) => {
-  const allowedTypes = ["image/jpeg", "image/png"];
-  const ext = path.extname(file.originalname).toLowerCase();
+const fileFilter: multer.Options["fileFilter"] = (
+  req,
+  file,
+  cb
+) => {
+  // =========================
+  // PHOTO VALIDATION
+  // =========================
+  if (file.fieldname === "photos") {
+    const allowedImageTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/jpg",
+    ];
 
-  // Check MIME type
-  if (!allowedTypes.includes(file.mimetype)) {
-    return cb(new ApiError("Only JPG and PNG images allowed", 400) as any, false);
+    const ext = path
+      .extname(file.originalname)
+      .toLowerCase();
+
+    const allowedExt = [
+      ".jpg",
+      ".jpeg",
+      ".png",
+    ];
+
+    if (
+      !allowedImageTypes.includes(file.mimetype)
+    ) {
+      return cb(
+        new ApiError(
+          "Only JPG, JPEG and PNG images allowed",
+          400
+        ) as any,
+        false
+      );
+    }
+
+    if (!allowedExt.includes(ext)) {
+      return cb(
+        new ApiError(
+          "Invalid image extension",
+          400
+        ) as any,
+        false
+      );
+    }
+
+    return cb(null, true);
   }
 
-  // Check extension
-  if (![".jpg", ".jpeg", ".png"].includes(ext)) {
-    return cb(new ApiError("Invalid file extension", 400) as any, false);
+  // =========================
+  // BROCHURE VALIDATION
+  // =========================
+  if (file.fieldname === "brochure") {
+    const ext = path
+      .extname(file.originalname)
+      .toLowerCase();
+
+    if (
+      file.mimetype !== "application/pdf"
+    ) {
+      return cb(
+        new ApiError(
+          "Only PDF allowed for brochure",
+          400
+        ) as any,
+        false
+      );
+    }
+
+    if (ext !== ".pdf") {
+      return cb(
+        new ApiError(
+          "Invalid brochure extension",
+          400
+        ) as any,
+        false
+      );
+    }
+
+    return cb(null, true);
   }
 
-  cb(null, true); // file accepted
+  // =========================
+  // UNKNOWN FIELD
+  // =========================
+  return cb(
+    new ApiError("Invalid upload field", 400) as any,
+    false
+  );
 };
 
 export const multi_upload = multer({
   storage,
+
   fileFilter,
+
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB per file
-    files: 5,                  // Max 5 files
+    fileSize: 5 * 1024 * 1024, // 5MB
+    files: 10,
   },
 });
