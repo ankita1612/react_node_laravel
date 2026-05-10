@@ -14,3 +14,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('employee', EmployeeController::class);
 });
 
+// Page Not Found / Fallback Route
+Route::fallback(function () {
+    return response()->json([
+        'success' => false,
+        'message' => 'API Route Not Found'
+    ], 404);
+});

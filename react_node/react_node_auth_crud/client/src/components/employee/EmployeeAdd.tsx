@@ -454,6 +454,11 @@ function EmployeeAdd() {
                 className="object-cover w-24 h-24 mt-3 border rounded-lg"
               />
             )}
+            {errors.profile_image && (
+              <p className="text-sm text-red-500">
+                {errors.profile_image.message}
+              </p>
+            )}
           </div>
           <div>
             <label className="block mb-1 text-sm font-medium">Logo</label>
