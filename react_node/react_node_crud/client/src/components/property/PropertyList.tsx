@@ -24,7 +24,7 @@ function PropertyList() {
     total: 0,
   });
 
-  const [sortField, setSortField] = useState("id");
+  const [sortField, setSortField] = useState("createdAt");
 
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   // Fetch property
@@ -83,14 +83,13 @@ function PropertyList() {
     fetchData();
   }, [fetchData]);
 
-  //const handleDelete = (id: string) => {
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     setDeleteId(id);
     setShowDeleteModal(true);
   };
   // Delete property
   const handleConfirmDelete = async () => {
-    if (!deleteId) return;
+    if (deleteId === null) return;
 
     const previousData = propertyData;
     setPropertyData((prev) => prev.filter((p) => p._id !== deleteId));
