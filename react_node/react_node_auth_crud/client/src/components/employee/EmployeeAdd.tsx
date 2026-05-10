@@ -80,15 +80,17 @@ const editSchema = yup.object().shape({
   status: yup.string().required("Status is required"),
 
   profile_image: yup
-    .mixed()
+    .mixed<File>()
     .nullable()
     .test("fileType", "Only JPG/PNG allowed", (value) => {
-      if (!value) return false;
+      // no new file selected in edit mode
+      if (!value) return true;
 
       return ["image/jpeg", "image/png"].includes(value.type);
     })
     .test("fileSize", "File size must be less than 2MB", (value) => {
-      if (!value) return false;
+      // no new file selected in edit mode
+      if (!value) return true;
 
       return value.size <= 2 * 1024 * 1024;
     }),
@@ -144,12 +146,12 @@ function EmployeeAdd() {
         setExistingImages(response.data.data.profile_image);
         if (response.data.data.profile_image) {
           setProfilePreview(
-            `${BACKEND_URL}/storage/${response.data.data.profile_image}`,
+            `${BACKEND_URL}/${response.data.data.profile_image}`,
           );
         }
 
         if (response.data.data.logo) {
-          setLogoPreview(`${BACKEND_URL}/storage/${response.data.data.logo}`);
+          setLogoPreview(`${BACKEND_URL}/${response.data.data.logo}`);
         }
 
         if (response.data.data.dob) {
