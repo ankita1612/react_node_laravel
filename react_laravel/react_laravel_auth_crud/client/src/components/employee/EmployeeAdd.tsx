@@ -141,7 +141,7 @@ function EmployeeAdd() {
         setValue("hobbies", data.data.hobbies);
         setValue("status", data.data.status);
 
-        setExistingImage(data.data.profile_image);
+        setExistingImages(data.data.profile_image);
         if (data.data.profile_image) {
           setProfilePreview(
             `${BACKEND_URL}/storage/${data.data.profile_image}`,
@@ -159,8 +159,6 @@ function EmployeeAdd() {
         if (data.data.DOJ) {
           setValue("DOJ", data.data.DOJ.split("T")[0]);
         }
-        setExistingImage(data.data.single_image);
-        setExistingImages(data.data.multiple_image || []); // array of paths
       } catch (error: any) {
         toast.error(
           error?.response?.data?.message ||

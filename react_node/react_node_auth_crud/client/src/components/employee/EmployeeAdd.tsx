@@ -126,44 +126,42 @@ function EmployeeAdd() {
       const stored = JSON.parse(localStorage.getItem("auth_data") || "{}");
       const accessToken = stored?.accessToken;
       try {
-        const { data } = await apiClient.get(`api/employee/${id}`, {
+        const response = await apiClient.get(`api/employee/${id}`, {
           headers: {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${accessToken}`,
           },
         });
 
-        setValue("first_name", data.data.first_name);
-        setValue("last_name", data.data.last_name);
-        setValue("salary", data.data.salary);
-        setValue("age", data.data.age);
-        setValue("description", data.data.description);
-        setValue("hobbies", data.data.hobbies);
-        setValue("status", data.data.status);
+        setValue("first_name", response.data.data.first_name);
+        setValue("last_name", response.data.data.last_name);
+        setValue("salary", response.data.data.salary);
+        setValue("age", response.data.data.age);
+        setValue("description", response.data.data.description);
+        setValue("hobbies", response.data.data.hobbies);
+        setValue("status", response.data.data.status);
 
-        setExistingImage(data.data.profile_image);
-        if (data.data.profile_image) {
+        setExistingImages(response.data.data.profile_image);
+        if (response.data.data.profile_image) {
           setProfilePreview(
-            `${BACKEND_URL}/storage/${data.data.profile_image}`,
+            `${BACKEND_URL}/storage/${response.data.data.profile_image}`,
           );
         }
 
-        if (data.data.logo) {
-          setLogoPreview(`${BACKEND_URL}/storage/${data.data.logo}`);
+        if (response.data.data.logo) {
+          setLogoPreview(`${BACKEND_URL}/storage/${response.data.data.logo}`);
         }
 
-        if (data.data.dob) {
-          setValue("dob", data.data.dob.split("T")[0]);
+        if (response.data.data.dob) {
+          setValue("dob", response.data.data.dob.split("T")[0]);
         }
 
-        if (data.data.DOJ) {
-          setValue("DOJ", data.data.DOJ.split("T")[0]);
+        if (response.data.data.DOJ) {
+          setValue("DOJ", response.data.data.DOJ.split("T")[0]);
         }
-        setExistingImage(data.data.single_image);
-        setExistingImages(data.data.multiple_image || []); // array of paths
       } catch (error: any) {
         toast.error(
-          error?.response?.data?.message ||
+          "-22-" + error?.response?.data?.message ||
             error?.message ||
             "Something went wrong",
         );
@@ -243,15 +241,13 @@ function EmployeeAdd() {
       if (mode === "add") {
         res = await apiClient.post(`/api/employee`, formData, header);
       } else {
-        //res = await apiClient.put(`/api/employee/${id}`, formData, header);
-        formData.append("_method", "PUT");
-        res = await apiClient.post(`/api/employee/${id}`, formData, header);
+        res = await apiClient.put(`/api/employee/${id}`, formData, header);
       }
       toast.success(res.data.message);
       navigate("/employee/list");
     } catch (error: any) {
       toast.error(
-        error?.response?.data?.message ||
+        "-11-" + error?.response?.data?.message ||
           error?.message ||
           "Something went wrong",
       );
